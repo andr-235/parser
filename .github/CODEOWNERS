@@ -1,0 +1,34 @@
+# Global ownership
+* @andrey
+
+# Security-critical files
+/.github/ @andrey
+/app/auth/ @andrey
+/app/config/ @andrey
+SECURITY.md @andrey
+
+# Database and migrations
+/alembic/ @andrey
+/app/models/ @andrey
+/app/database/ @andrey
+
+# VK API integration
+/app/vk/ @andrey
+/app/services/vk_* @andrey
+
+# Docker and deployment
+Dockerfile* @andrey
+docker-compose*.yml @andrey
+/deployment/ @andrey
+
+# Configuration files
+*.env* @andrey
+pyproject.toml @andrey
+requirements*.txt @andrey
+
+# Documentation (can be more open)
+*.md @andrey
+/docs/ @andrey
+
+# Memory Bank files (protected)
+/memory-bank/ @andrey

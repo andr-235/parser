@@ -1,0 +1,277 @@
+name: CI/CD Pipeline - VK Comments Monitor
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'memory-bank/**'
+  pull_request:
+    branches: [ main ]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'memory-bank/**'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+
+env:
+  PYTHON_VERSION: '3.13'
+  NODE_VERSION: '20'
+  DOCKER_BUILDKIT: 1
+
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+  packages: write
+
+jobs:
+  # Параллельные проверки качества кода
+  code-quality:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        check: [lint, type-check, security, format-check]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements/dev.txt
+
+      - name: Run linting
+        if: matrix.check == 'lint'
+        run: |
+          ruff check app tests
+          flake8 app tests --max-line-length=88 --extend-ignore=E203,W503
+
+      - name: Run type checking
+        if: matrix.check == 'type-check'
+        run: mypy app --strict
+
+      - name: Run security scan
+        if: matrix.check == 'security'
+        run: |
+          bandit -r app/ -f json -o bandit-report.json
+          safety check --json --output safety-report.json
+
+      - name: Check code formatting
+        if: matrix.check == 'format-check'
+        run: |
+          black --check app tests
+          isort --check-only app tests
+
+  # Тестирование с поддержкой PostgreSQL и Redis
+  test:
+    runs-on: ubuntu-latest
+    needs: code-quality
+    strategy:
+      matrix:
+        python-version: ['3.13']
+        test-type: [unit, integration, api]
+    
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: vk_monitor_test
+          POSTGRES_USER: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements/dev.txt
+          pip install -r requirements/test.txt
+
+      - name: Wait for PostgreSQL
+        run: |
+          until pg_isready -h localhost -p 5432 -U postgres; do
+            echo "Waiting for PostgreSQL..."
+            sleep 2
+          done
+
+      - name: Run database migrations
+        run: |
+          alembic upgrade head
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/vk_monitor_test
+          REDIS_URL: redis://localhost:6379
+
+      - name: Run unit tests
+        if: matrix.test-type == 'unit'
+        run: |
+          pytest tests/unit/ -v --cov=app --cov-report=xml --cov-report=html
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/vk_monitor_test
+          REDIS_URL: redis://localhost:6379
+
+      - name: Run integration tests
+        if: matrix.test-type == 'integration'
+        run: |
+          pytest tests/integration/ -v --tb=short
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/vk_monitor_test
+          REDIS_URL: redis://localhost:6379
+          VK_ACCESS_TOKEN: ${{ secrets.VK_TEST_TOKEN }}
+
+      - name: Run API tests
+        if: matrix.test-type == 'api'
+        run: |
+          pytest tests/api/ -v --tb=short
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/vk_monitor_test
+          REDIS_URL: redis://localhost:6379
+
+      - name: Upload coverage to Codecov
+        if: matrix.test-type == 'unit' && matrix.python-version == '3.13'
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.xml
+          fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  # Docker образ сборка
+  build:
+    runs-on: ubuntu-latest
+    needs: [test]
+    outputs:
+      image-tag: ${{ steps.meta.outputs.tags }}
+      image-digest: ${{ steps.build.outputs.digest }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,prefix=sha-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push Docker image
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            PYTHON_VERSION=${{ env.PYTHON_VERSION }}
+
+  # Security Scanning
+  security:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy scan results
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: python
+          queries: security-extended,security-and-quality
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+
+  # Production Deployment (только для main ветки)
+  deploy:
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    needs: [build, security]
+    environment: 
+      name: production
+      url: https://vk-monitor.your-domain.com
+    
+    steps:
+      - name: Deploy to production
+        run: |
+          echo "🚀 Deploying image: ${{ needs.build.outputs.image-tag }}"
+          echo "🔒 Security scan passed"
+          echo "✅ Ready for production deployment"
+          # Здесь будет код для реального деплоя 

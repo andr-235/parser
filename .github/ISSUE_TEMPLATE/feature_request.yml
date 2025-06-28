@@ -1,0 +1,51 @@
+name: ✨ Feature Request
+description: Suggest an idea for VK Comments Monitor
+title: "[FEATURE] "
+labels: [enhancement, triage]
+body:
+  - type: textarea
+    attributes:
+      label: Feature Description
+      description: A clear and concise description of the feature you'd like to see
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Use Case
+      description: Describe the use case and why this feature would be valuable
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Proposed Solution
+      description: Describe how you think this feature should work
+    validations:
+      required: false
+
+  - type: textarea
+    attributes:
+      label: Alternative Solutions
+      description: Describe any alternative solutions or features you've considered
+    validations:
+      required: false
+
+  - type: dropdown
+    attributes:
+      label: Priority
+      description: How important is this feature to you?
+      options:
+        - Low
+        - Medium
+        - High
+        - Critical
+    validations:
+      required: true
+
+  - type: checkboxes
+    attributes:
+      label: Implementation
+      options:
+        - label: I would be willing to implement this feature
+        - label: I would be willing to help test this feature
