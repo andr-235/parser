@@ -1,0 +1,22 @@
+# Development Dependencies
+-r base.txt
+
+# Testing Framework
+pytest==8.3.3
+pytest-asyncio==0.25.0
+pytest-cov==6.0.0
+httpx==0.28.1  # For testing async HTTP clients
+
+# Code Quality & Formatting
+ruff==0.9.4
+black==24.12.0
+mypy==1.14.1
+
+# Development Server & Debugging
+watchfiles==1.0.3  # For auto-reload in development
+
+# Database Testing
+pytest-postgresql==6.1.1
+
+# VK API Testing (when available)
+# vkbottle==4.5.2  # Will be added after validation 

@@ -84,18 +84,46 @@ uvicorn app.main:app --reload
 
 ## 🔧 Конфигурация
 
-Скопируйте `.env.example` в `.env` и настройте переменные:
+### Environment Setup
 
+1. **Скопируйте `.env.example` в `.env`**:
 ```bash
 cp .env.example .env
 ```
 
-### Основные переменные:
+2. **Настройте переменные окружения** в `.env` файле:
+
+#### Database Configuration
 ```env
-DATABASE_URL=postgresql://user:password@localhost/dbname
-REDIS_URL=redis://localhost:6379
-VK_ACCESS_TOKEN=your_vk_token
+POSTGRES_DB=vk_monitor_dev
+POSTGRES_USER=vk_monitor
+POSTGRES_PASSWORD=your_secure_postgres_password_here
 ```
+
+#### Redis Configuration
+```env
+REDIS_PASSWORD=your_secure_redis_password_here
+```
+
+#### Application Configuration
+```env
+DEBUG=true
+LOG_LEVEL=info
+SECRET_KEY=your_secret_key_for_jwt_tokens_here
+```
+
+#### VK API Configuration
+```env
+VK_API_TOKEN=your_vk_api_token_here
+VK_API_VERSION=5.131
+```
+
+### 🔒 Security Notes
+
+- **Никогда не коммитьте `.env` файл** в git репозиторий
+- Используйте **сильные, уникальные пароли** для каждой среды
+- **Регулярно ротируйте секреты** в production среде
+- Все пароли и токены теперь настраиваются через `.env` файл
 
 ## 🧪 Тестирование
 
