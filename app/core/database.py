@@ -56,6 +56,17 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
 
 async def create_tables():
     """Create all database tables."""
+    # Import all models to ensure they are registered with Base.metadata
+    from app.models import (  # noqa: F401
+        BaseModel,
+        CommentMatch,
+        Keyword,
+        MonitorTask,
+        VKComment,
+        VKPost,
+        VKUser,
+    )
+
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 

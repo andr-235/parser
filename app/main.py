@@ -7,6 +7,7 @@ from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.v1 import api_router
 from app.core.config import get_settings
 from app.core.database import create_tables, get_db
 
@@ -27,9 +28,10 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title=settings.app_name,
     version=settings.app_version,
-    description="VK Comments monitoring and analysis system",
+    description="VK Comments monitoring and analysis system with keyword tracking",
     docs_url="/docs",
     redoc_url="/redoc",
+    openapi_url="/openapi.json",
     lifespan=lifespan,
 )
 
@@ -42,6 +44,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Include API routers
+app.include_router(api_router)
+
 
 @app.get("/")
 async def root() -> Dict[str, str]:
@@ -50,6 +55,8 @@ async def root() -> Dict[str, str]:
         "message": f"Welcome to {settings.app_name}",
         "version": settings.app_version,
         "status": "running",
+        "docs": "/docs",
+        "api": "/api/v1",
     }
 
 
@@ -60,6 +67,7 @@ async def health_check() -> Dict[str, Any]:
         "status": "healthy",
         "service": settings.app_name,
         "version": settings.app_version,
+        "api_version": "v1",
     }
 
 
@@ -91,10 +99,21 @@ async def app_info() -> Dict[str, Any]:
             "VK API integration",
             "Real-time comment monitoring",
             "Keyword-based filtering",
-            "PostgreSQL data storage",
+            "PostgreSQL data storage with full models",
             "Redis caching",
             "Background task processing",
+            "RESTful API with FastAPI",
+            "Comprehensive monitoring system",
         ],
+        "api": {
+            "version": "v1",
+            "docs": "/docs",
+            "endpoints": {
+                "health": "/api/v1/health",
+                "vk": "/api/v1/vk",
+                "monitoring": "/api/v1/monitoring",
+            },
+        },
     }
 
 
