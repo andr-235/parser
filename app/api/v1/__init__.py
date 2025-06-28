@@ -1,14 +1,16 @@
-"""API v1 router setup."""
+"""API v1 router configuration."""
 
 from fastapi import APIRouter
 
-from app.api.v1 import health, monitoring, vk
+from app.api.v1 import health, monitoring, vk, vk_integration
 
-api_router = APIRouter(prefix="/api/v1")
+# Create API router
+router = APIRouter()
 
-# Include routers
-api_router.include_router(health.router, prefix="/health", tags=["health"])
-api_router.include_router(vk.router, prefix="/vk", tags=["vk"])
-api_router.include_router(monitoring.router, prefix="/monitoring", tags=["monitoring"])
+# Include all routers
+router.include_router(health.router)
+router.include_router(vk.router)
+router.include_router(monitoring.router)
+router.include_router(vk_integration.router)  # New VK integration endpoints
 
-__all__ = ["api_router"]
+__all__ = ["router"]

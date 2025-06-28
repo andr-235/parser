@@ -1,83 +1,98 @@
 """Application configuration management."""
 
-from functools import lru_cache
-from typing import Optional
+from typing import List, Optional
 
-from pydantic import Field, PostgresDsn, RedisDsn
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    """Application settings."""
+    """Application settings with VK API integration."""
 
     model_config = SettingsConfigDict(
-        env_file=".env", env_file_encoding="utf-8", case_sensitive=False, extra="ignore"
+        env_file=".env", env_file_encoding="utf-8", case_sensitive=True, extra="ignore"
     )
 
-    # Application Settings
-    app_name: str = Field(default="VK Comments Monitor", description="Application name")
-    app_version: str = Field(default="0.1.0", description="Application version")
-    debug: bool = Field(default=False, description="Debug mode")
-
-    # Server Settings
-    host: str = Field(default="0.0.0.0", description="Server host")
-    port: int = Field(default=8000, description="Server port")
-
-    # Database Settings
-    postgres_user: str = Field(default="postgres", description="PostgreSQL username")
-    postgres_password: str = Field(
-        default="postgres", description="PostgreSQL password"
-    )
-    postgres_host: str = Field(default="localhost", description="PostgreSQL host")
-    postgres_port: int = Field(default=5432, description="PostgreSQL port")
-    postgres_db: str = Field(
-        default="vk_comments", description="PostgreSQL database name"
+    # Application Configuration
+    APP_NAME: str = Field(default="VK Comments Monitor", description="Application name")
+    APP_VERSION: str = Field(default="1.0.0", description="Application version")
+    DEBUG: bool = Field(default=False, description="Debug mode")
+    ENVIRONMENT: str = Field(
+        default="development", description="Environment (development/production)"
     )
 
-    @property
-    def database_url(self) -> str:
-        """Construct database URL."""
-        return f"postgresql+asyncpg://{self.postgres_user}:{self.postgres_password}@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}"
+    # Server Configuration
+    HOST: str = Field(default="0.0.0.0", description="Server host")
+    PORT: int = Field(default=8000, description="Server port")
 
-    # Redis Settings
-    redis_host: str = Field(default="redis", description="Redis host")
-    redis_port: int = Field(default=6379, description="Redis port")
-    redis_password: Optional[str] = Field(
-        default="dev_redis_password", description="Redis password"
+    # Database Configuration
+    DATABASE_URL: str = Field(
+        default="postgresql+asyncpg://vk_monitor:vk_monitor_password"
+        "@postgres:5432/vk_monitor_db",
+        description="Database connection URL",
     )
-    redis_db: int = Field(default=0, description="Redis database number")
+    DATABASE_ECHO: bool = Field(default=False, description="Echo SQL queries")
 
-    @property
-    def redis_url(self) -> str:
-        """Construct Redis URL."""
-        if self.redis_password:
-            return f"redis://:{self.redis_password}@{self.redis_host}:{self.redis_port}/{self.redis_db}"
-        return f"redis://{self.redis_host}:{self.redis_port}/{self.redis_db}"
-
-    # Security Settings
-    secret_key: str = Field(
-        default="your-secret-key-change-in-production", description="JWT secret key"
+    # Redis Configuration
+    REDIS_URL: str = Field(
+        default="redis://redis:6379/0", description="Redis connection URL"
     )
-    algorithm: str = Field(default="HS256", description="JWT algorithm")
-    access_token_expire_minutes: int = Field(
+
+    # Security Configuration
+    SECRET_KEY: str = Field(
+        default="vk-monitor-secret-key-change-in-production",
+        description="Secret key for JWT tokens",
+    )
+    ALGORITHM: str = Field(default="HS256", description="JWT algorithm")
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(
         default=30, description="Token expiration time"
     )
 
-    # VK API Settings
-    vk_access_token: Optional[str] = Field(
-        default=None, description="VK API access token"
-    )
-    vk_api_version: str = Field(default="5.131", description="VK API version")
-    vk_requests_per_second: int = Field(default=3, description="VK API rate limit")
-
-    # Logging Settings
-    log_level: str = Field(default="INFO", description="Logging level")
-    log_format: str = Field(
-        default="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    # CORS Configuration
+    ALLOWED_ORIGINS: List[str] = Field(
+        default=["http://localhost:3000", "http://localhost:8000"],
+        description="Allowed CORS origins",
     )
 
+    # VK API Configuration
+    VK_API_TOKEN: Optional[str] = Field(default=None, description="VK API access token")
+    VK_API_VERSION: str = Field(default="5.131", description="VK API version")
+    VK_API_REQUESTS_PER_SECOND: int = Field(
+        default=3, description="VK API rate limit (requests per second)"
+    )
+    VK_API_TIMEOUT: int = Field(
+        default=30, description="VK API request timeout in seconds"
+    )
+    VK_GROUP_ID: Optional[int] = Field(
+        default=None, description="Default VK group ID for monitoring"
+    )
 
-@lru_cache()
-def get_settings() -> Settings:
-    """Get cached settings instance."""
-    return Settings()
+    # Background Tasks Configuration
+    CELERY_BROKER_URL: str = Field(
+        default="redis://redis:6379/1", description="Celery broker URL"
+    )
+    CELERY_RESULT_BACKEND: str = Field(
+        default="redis://redis:6379/2", description="Celery result backend URL"
+    )
+
+    # Monitoring Configuration
+    CHECK_INTERVAL_SECONDS: int = Field(
+        default=300, description="Default check interval for monitoring tasks (seconds)"
+    )
+    MAX_COMMENTS_PER_REQUEST: int = Field(
+        default=100, description="Maximum comments to fetch per VK API request"
+    )
+    SENTIMENT_ANALYSIS_ENABLED: bool = Field(
+        default=True, description="Enable sentiment analysis for comments"
+    )
+
+    # Logging Configuration
+    LOG_LEVEL: str = Field(default="INFO", description="Logging level")
+    LOG_FORMAT: str = Field(
+        default="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        description="Log format",
+    )
+
+
+# Global settings instance
+settings = Settings()

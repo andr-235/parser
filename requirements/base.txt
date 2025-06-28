@@ -25,4 +25,9 @@ passlib[bcrypt]==1.7.4
 python-multipart==0.0.20
 
 # Utilities
-python-dotenv==1.0.1 
+python-dotenv==1.0.1
+
+# VK API Integration
+vkbottle==4.5.2
+aiofiles==24.1.0
+aiohttp>=3.12.13 

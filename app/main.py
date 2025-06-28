@@ -1,129 +1,96 @@
-"""Main FastAPI application."""
+"""FastAPI application main module."""
 
+import logging
 from contextlib import asynccontextmanager
-from typing import Any, Dict
+from typing import AsyncGenerator
 
-from fastapi import Depends, FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi.responses import JSONResponse
 
-from app.api.v1 import api_router
-from app.core.config import get_settings
-from app.core.database import create_tables, get_db
+from app.api.v1 import router as api_v1_router
+from app.core.config import settings
+from app.core.database import close_db, init_db
 
-settings = get_settings()
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
-    """Application lifespan events."""
+async def lifespan(app: FastAPI) -> AsyncGenerator:
+    """Application lifespan manager."""
     # Startup
-    await create_tables()
+    logger.info("Starting VK Comments Monitor application")
+    await init_db()
+    logger.info("Database initialized")
+
     yield
+
     # Shutdown
-    pass
+    logger.info("Shutting down application")
+    await close_db()
 
 
-# FastAPI application instance
+# Create FastAPI application
 app = FastAPI(
-    title=settings.app_name,
-    version=settings.app_version,
-    description="VK Comments monitoring and analysis system with keyword tracking",
+    title=settings.APP_NAME,
+    version=settings.APP_VERSION,
+    description="VK Comments Monitoring System with real VK API integration",
+    lifespan=lifespan,
     docs_url="/docs",
     redoc_url="/redoc",
     openapi_url="/openapi.json",
-    lifespan=lifespan,
 )
 
-# CORS middleware
+# Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"] if settings.debug else ["http://localhost:3000"],
+    allow_origins=settings.ALLOWED_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH"],
     allow_headers=["*"],
 )
 
-# Include API routers
-app.include_router(api_router)
+
+# Add request logging middleware
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    """Log all requests."""
+    logger.info(f"{request.method} {request.url.path}")
+    response = await call_next(request)
+    logger.info(f"Response: {response.status_code}")
+    return response
 
 
-@app.get("/")
-async def root() -> Dict[str, str]:
-    """Root endpoint."""
-    return {
-        "message": f"Welcome to {settings.app_name}",
-        "version": settings.app_version,
-        "status": "running",
-        "docs": "/docs",
-        "api": "/api/v1",
-    }
-
-
-@app.get("/health")
-async def health_check() -> Dict[str, Any]:
-    """Health check endpoint."""
-    return {
-        "status": "healthy",
-        "service": settings.app_name,
-        "version": settings.app_version,
-        "api_version": "v1",
-    }
-
-
-@app.get("/health/database")
-async def database_health_check(db: AsyncSession = Depends(get_db)) -> Dict[str, Any]:
-    """Database health check endpoint."""
-    try:
-        # Simple database query to test connection
-        result = await db.execute("SELECT 1")
-        await result.fetchone()
-        return {
-            "status": "healthy",
-            "service": "database",
-            "message": "Database connection successful",
-        }
-    except Exception as e:
-        return {"status": "unhealthy", "service": "database", "error": str(e)}
-
-
-@app.get("/info")
-async def app_info() -> Dict[str, Any]:
-    """Application information endpoint."""
-    return {
-        "name": settings.app_name,
-        "version": settings.app_version,
-        "debug": settings.debug,
-        "description": "VK Comments monitoring and analysis system",
-        "features": [
-            "VK API integration",
-            "Real-time comment monitoring",
-            "Keyword-based filtering",
-            "PostgreSQL data storage with full models",
-            "Redis caching",
-            "Background task processing",
-            "RESTful API with FastAPI",
-            "Comprehensive monitoring system",
-        ],
-        "api": {
-            "version": "v1",
-            "docs": "/docs",
-            "endpoints": {
-                "health": "/api/v1/health",
-                "vk": "/api/v1/vk",
-                "monitoring": "/api/v1/monitoring",
-            },
+# Global exception handler
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    """Global exception handler."""
+    logger.error(f"Unhandled exception: {exc}", exc_info=True)
+    return JSONResponse(
+        status_code=500,
+        content={
+            "error": "internal_server_error",
+            "message": "An unexpected error occurred",
+            "path": str(request.url.path),
         },
-    }
-
-
-if __name__ == "__main__":
-    import uvicorn
-
-    uvicorn.run(
-        "app.main:app",
-        host=settings.host,
-        port=settings.port,
-        reload=settings.debug,
-        log_level=settings.log_level.lower(),
     )
+
+
+# Include API routes
+app.include_router(api_v1_router, prefix="/api/v1")
+
+
+# Root endpoint
+@app.get("/", tags=["root"])
+async def root():
+    """Root endpoint with application info."""
+    return {
+        "message": "VK Comments Monitor API",
+        "version": settings.APP_VERSION,
+        "docs": "/docs",
+        "status": "running",
+    }
