@@ -3,6 +3,7 @@
 from typing import Any, Dict
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
@@ -30,8 +31,8 @@ async def database_health_check(
     """Database connectivity health check."""
     try:
         # Test database connection
-        result = await db.execute("SELECT 1 as test")
-        test_result = await result.fetchone()
+        result = await db.execute(text("SELECT 1 as test"))
+        test_result = result.fetchone()
 
         if test_result and test_result[0] == 1:
             return {
@@ -66,7 +67,7 @@ async def dependencies_check() -> Dict[str, Any]:
         from app.core.database import engine
 
         async with engine.begin() as conn:
-            await conn.execute("SELECT 1")
+            await conn.execute(text("SELECT 1"))
         dependencies["database"] = {
             "status": "healthy",
             "message": "PostgreSQL connection active",
@@ -81,7 +82,7 @@ async def dependencies_check() -> Dict[str, Any]:
     try:
         import redis.asyncio as redis
 
-        redis_client = redis.from_url(settings.redis_url)
+        redis_client = redis.from_url(settings.REDIS_URL)
         await redis_client.ping()
         await redis_client.close()
         dependencies["redis"] = {
@@ -95,7 +96,7 @@ async def dependencies_check() -> Dict[str, Any]:
         }
 
     # Check VK API token
-    if settings.vk_access_token:
+    if settings.VK_API_TOKEN:
         dependencies["vk_api"] = {
             "status": "configured",
             "message": "VK API token is set",
