@@ -80,6 +80,28 @@ shell: ## Open Python shell with project context
 	$(POETRY) run python
 
 # ================================
+# Celery Background Tasks
+# ================================
+
+celery-worker: ## Run Celery worker
+	$(POETRY) run celery -A app.workers.celery_app worker --loglevel=info
+
+celery-beat: ## Run Celery beat scheduler
+	$(POETRY) run celery -A app.workers.celery_app beat --loglevel=info
+
+celery-flower: ## Run Flower monitoring for Celery
+	$(POETRY) run celery -A app.workers.celery_app flower --host=0.0.0.0 --port=5555
+
+celery-monitor: ## Monitor Celery workers and tasks
+	$(POETRY) run celery -A app.workers.celery_app events
+
+celery-purge: ## Purge all Celery queues (WARNING: destroys pending tasks)
+	$(POETRY) run celery -A app.workers.celery_app purge -f
+
+celery-status: ## Show Celery worker status
+	$(POETRY) run celery -A app.workers.celery_app status
+
+# ================================
 # Database Operations
 # ================================
 

@@ -59,6 +59,7 @@ async def create_tables():
         BaseModel,
         CommentMatch,
         Keyword,
+        MonitorStatus,
         MonitorTask,
         VKComment,
         VKPost,
