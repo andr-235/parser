@@ -1,7 +1,7 @@
 """VK Integration API endpoints for real data fetching."""
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import List
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from pydantic import BaseModel
@@ -9,15 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.vk_client import get_vk_client, init_vk_client
-from app.schemas.monitoring import CommentMatchRead
-from app.schemas.vk import (
-    VKComment,
-    VKCommentRead,
-    VKPost,
-    VKPostRead,
-    VKUser,
-    VKUserRead,
-)
+from app.schemas.vk import VKCommentResponse, VKPostResponse, VKUserResponse
 from app.services.monitoring import MonitoringService
 from app.services.vk_service import VKService
 
@@ -103,7 +95,8 @@ async def get_group_info(group_id: int, db: AsyncSession = Depends(get_db)):
 
         if not group_data:
             raise HTTPException(
-                status_code=404, detail=f"Group {group_id} not found or not accessible"
+                status_code=404,
+                detail=f"Group {group_id} not found or not accessible",
             )
 
         return group_data
@@ -310,7 +303,7 @@ async def search_keywords_in_vk(
         )
 
 
-@router.get("/group/{group_id}/posts", response_model=List[VKPostRead])
+@router.get("/group/{group_id}/posts", response_model=List[VKPostResponse])
 async def get_synced_posts(
     group_id: int,
     skip: int = Query(0, ge=0),
@@ -330,7 +323,7 @@ async def get_synced_posts(
         raise HTTPException(status_code=500, detail=f"Failed to get posts: {str(e)}")
 
 
-@router.get("/group/{group_id}/comments", response_model=List[VKCommentRead])
+@router.get("/group/{group_id}/comments", response_model=List[VKCommentResponse])
 async def get_synced_comments(
     group_id: int,
     skip: int = Query(0, ge=0),
@@ -348,14 +341,16 @@ async def get_synced_comments(
         # Apply pagination
         paginated_comments = comments[skip : skip + limit]
 
-        return [VKCommentRead.model_validate(comment) for comment in paginated_comments]
+        return [
+            VKCommentResponse.model_validate(comment) for comment in paginated_comments
+        ]
 
     except Exception as e:
         logger.error(f"Error getting comments for group {group_id}: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to get comments: {str(e)}")
 
 
-@router.get("/user/{user_id}", response_model=VKUserRead)
+@router.get("/user/{user_id}", response_model=VKUserResponse)
 async def get_user_info(
     user_id: int,
     sync_fresh: bool = Query(False, description="Fetch fresh data from VK API"),
@@ -376,7 +371,7 @@ async def get_user_info(
         if not user:
             raise HTTPException(status_code=404, detail=f"User {user_id} not found")
 
-        return VKUserRead.model_validate(user)
+        return VKUserResponse.model_validate(user)
 
     except HTTPException:
         raise
