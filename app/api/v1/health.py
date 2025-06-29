@@ -1,6 +1,6 @@
 """Health check endpoints."""
 
-from typing import Any, Dict
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import text
@@ -14,7 +14,7 @@ router = APIRouter()
 
 
 @router.get("/")
-async def health_check() -> Dict[str, Any]:
+async def health_check() -> dict[str, Any]:
     """Basic health check endpoint."""
     return {
         "status": "healthy",
@@ -27,7 +27,7 @@ async def health_check() -> Dict[str, Any]:
 @router.get("/database")
 async def database_health_check(
     db: AsyncSession = Depends(get_db),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Database connectivity health check."""
     try:
         # Test database connection
@@ -49,12 +49,12 @@ async def database_health_check(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=f"Database connection failed: {str(e)}",
+            detail=f"Database connection failed: {e!s}",
         ) from e
 
 
 @router.get("/dependencies")
-async def dependencies_check() -> Dict[str, Any]:
+async def dependencies_check() -> dict[str, Any]:
     """Check external dependencies status."""
     dependencies = {
         "database": {"status": "unknown", "message": "Not tested"},
