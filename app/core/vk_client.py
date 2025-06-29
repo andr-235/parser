@@ -5,9 +5,7 @@ import logging
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-import aiohttp
-from vkbottle import API
-from vkbottle.exception import VKAPIError
+from vkbottle import API, VKAPIError
 
 from app.core.config import settings
 
@@ -113,7 +111,7 @@ class VKClient:
                                 if hasattr(post, "reposts")
                                 else 0
                             ),
-                            "post_url": f"https://vk.com/wall-{group_id}_{post.id}",
+                            "post_url": (f"https://vk.com/wall-{group_id}_{post.id}"),
                         }
                     )
 
@@ -176,7 +174,10 @@ class VKClient:
                             "author_screen_name": author_screen_name,
                             "text": getattr(comment, "text", ""),
                             "date": datetime.fromtimestamp(comment.date),
-                            "comment_url": f"https://vk.com/wall-{group_id}_{post_id}?reply={comment.id}",
+                            "comment_url": (
+                                f"https://vk.com/wall-{group_id}_{post_id}"
+                                f"?reply={comment.id}"
+                            ),
                         }
                     )
 
@@ -213,7 +214,8 @@ class VKClient:
                             comment["post_text"] = post.get("text", "")
                             comment["post_url"] = post.get("post_url", "")
                             all_comments.append(comment)
-                            break  # Found match, no need to check other keywords
+                            # Found match, no need to check other keywords
+                            break
 
                 # Respect limit
                 if len(all_comments) >= limit:
@@ -232,7 +234,7 @@ class VKClient:
 
             result = await self.api.users.get(
                 user_ids=[user_id],
-                fields="screen_name,photo_50,photo_100,verified,followers_count",
+                fields=("screen_name,photo_50,photo_100,verified,followers_count"),
             )
 
             if result and len(result) > 0:

@@ -1,13 +1,21 @@
-# Environment variables
+# ================================
+# VK Comments Parser - .gitignore
+# ================================
+
+# Environment variables (NEVER commit these!)
 .env
 .env.local
 .env.*.local
+.env.production
+.env.staging
 
-# Python
+# Python bytecode
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
+
+# Distribution / packaging
 .Python
 build/
 develop-eggs/
@@ -21,6 +29,7 @@ parts/
 sdist/
 var/
 wheels/
+share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
@@ -29,10 +38,6 @@ MANIFEST
 # PyInstaller
 *.manifest
 *.spec
-
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
 
 # Unit test / coverage reports
 htmlcov/
@@ -44,142 +49,31 @@ htmlcov/
 nosetests.xml
 coverage.xml
 *.cover
+*.py,cover
 .hypothesis/
 .pytest_cache/
+cover/
 
 # Virtual environments
-.env
-.venv
-env/
 venv/
 ENV/
 env.bak/
 venv.bak/
 
-# IDEs
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
+# Poetry
+# Don't ignore poetry.lock - we want reproducible builds
+# poetry.lock should be committed to version control
 
-# Docker
-.dockerignore
-
-# Logs
-*.log
-logs/
-
-# OS
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-
-# Temporary files
-*.tmp
-*.temp
-
-# Distribution / packaging
-share/python-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
-
-# PyCharm
-#  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
-#  be added to the global gitignore or merged into this project gitignore.  For a PyCharm
-#  project, it is common to ignore these files, since they will be recreated,
-#  and may contain sensitive information.
-.idea/
-
-# VSCode
-.vscode/
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
-!.vscode/*.code-snippets
-
-# Cursor
-.cursor/
-
-# Local history for Cursor/VSCode
-.history/
-.ionide/
-
-# Database
-*.db
-*.sqlite
-*.sqlite3
-
-# Docker
-docker-compose.override.yml
-
-# Test temporary files
-test.db
-get-pip.py
-
-# FastAPI
-.fastapi_cache/
-
-# Redis
-dump.rdb
+# PDM
+.pdm.toml
+__pypackages__/
 
 # Celery
 celerybeat-schedule
 celerybeat.pid
 
-# Log files
-*.log
-logs/
-
-# Temporary files
-.tmp/
-tmp/
-temp/
-
-# OS generated files
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-*~
-
-# Project specific
-/data/
-/output/
-/screenshots/
-
-# Translations
-*.mo
-*.pot
-
-# Django stuff:
-local_settings.py
-db.sqlite3
-db.sqlite3-journal
-
-# Flask stuff:
-instance/
-.webassets-cache
-
-# Scrapy stuff:
-.scrapy
-
-# Sphinx documentation
-docs/_build/
-
-# PyBuilder
-.pybuilder/
-target/
+# FastAPI specific
+.fastapi_cache/
 
 # Jupyter Notebook
 .ipynb_checkpoints
@@ -189,38 +83,13 @@ profile_default/
 ipython_config.py
 
 # pyenv
-#   For a library or package, you might want to ignore these files since the code is
-#   intended to run in multiple environments; otherwise, check them in:
-# .python-version
+.python-version
 
-# pipenv
-#   According to pypa/pipenv#598, it is recommended to include Pipfile.lock in version control.
-#   However, in case of collaboration, if having platform-specific dependencies or dependencies
-#   having no cross-platform support, pipenv may install dependencies that don't work, or not
-#   install all needed dependencies.
-#Pipfile.lock
+# Pipenv
+Pipfile.lock
 
-# poetry
-#   Similar to Pipfile.lock, it is generally recommended to include poetry.lock in version control.
-#   This is especially recommended for binary packages to ensure reproducibility, and is more
-#   commonly ignored for libraries.
-#   https://python-poetry.org/docs/basic-usage/#commit-your-poetrylock-file-to-version-control
-#poetry.lock
-
-# pdm
-#   Similar to Pipfile.lock, it is generally recommended to include pdm.lock in version control.
-#pdm.lock
-#   pdm stores project-wide configurations in .pdm.toml, but it is recommended to not include it
-#   in version control.
-#   https://pdm.fming.dev/#use-with-ide
-.pdm.toml
-
-# PEP 582; used by e.g. github.com/David-OConnor/pyflow and github.com/pdm-project/pdm
+# PEP 582
 __pypackages__/
-
-# Celery stuff
-celerybeat-schedule
-celerybeat.pid
 
 # SageMath parsed files
 *.sage.py
@@ -249,14 +118,10 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
-# PyCharm
-#  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
-#  be added to the global gitignore or merged into this project gitignore.  For a PyCharm
-#  project, it is common to ignore these files, since they will be recreated,
-#  and may contain sensitive information.
-.idea/
+# Ruff cache
+.ruff_cache/
 
-# VSCode
+# IDEs and Editors
 .vscode/
 !.vscode/settings.json
 !.vscode/tasks.json
@@ -264,44 +129,15 @@ cython_debug/
 !.vscode/extensions.json
 !.vscode/*.code-snippets
 
-# Cursor
-.cursor/
+.idea/
+*.swp
+*.swo
+*~
 
-# Local history for Cursor/VSCode
+# Cursor specific
+.cursor/
 .history/
 .ionide/
-
-# Database
-*.db
-*.sqlite
-*.sqlite3
-
-# Docker
-.dockerignore
-docker-compose.override.yml
-
-# Test temporary files
-test.db
-get-pip.py
-
-# FastAPI
-.fastapi_cache/
-
-# Redis
-dump.rdb
-
-# Celery
-celerybeat-schedule
-celerybeat.pid
-
-# Log files
-*.log
-logs/
-
-# Temporary files
-.tmp/
-tmp/
-temp/
 
 # OS generated files
 .DS_Store
@@ -311,9 +147,124 @@ temp/
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+test.db
+
+# Docker
+docker-compose.override.yml
+.dockerignore
+
+# Redis
+dump.rdb
+
+# Log files
+*.log
+logs/
+log/
+
+# Temporary files
+*.tmp
+*.temp
+.tmp/
+tmp/
+temp/
+
+# Backup files
+*.bak
+*.backup
 *~
 
-# Project specific
+# Project specific directories
 /data/
 /output/
-/screenshots/ 
+/screenshots/
+/uploads/
+
+# Translations
+*.mo
+*.pot
+
+# Scrapy stuff:
+.scrapy
+
+# Sphinx documentation
+docs/_build/
+
+# PyBuilder
+.pybuilder/
+target/
+
+# Security
+.secrets/
+secrets.json
+*.pem
+*.key
+
+# Monitoring & metrics
+prometheus_data/
+grafana_data/
+
+# Pre-commit
+.pre-commit-config.yaml.backup
+
+# Alembic
+# Keep alembic.ini and versions/ but ignore local overrides
+alembic.ini.local
+
+# Local development overrides
+docker-compose.local.yml
+.local/
+local/
+
+# MacOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+
+# Archives
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
+
+# Fonts
+*.ttf
+*.otf
+*.woff
+*.woff2
+
+# Media files (if not part of the project)
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.svg
+*.mp4
+*.avi
+*.mov
+
+# Don't ignore these specific files
+!app/static/assets/*.png
+!app/static/assets/*.jpg
+!app/static/assets/*.svg
+
+# Performance profiling
+.prof
+*.profile 

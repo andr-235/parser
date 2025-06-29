@@ -5,11 +5,11 @@ from typing import Any, Dict
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.config import get_settings
+from app.core.config import settings
 from app.core.database import get_db
 
 router = APIRouter()
-settings = get_settings()
+# settings imported directly
 
 
 @router.get("/")
