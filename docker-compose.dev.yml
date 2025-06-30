@@ -1,14 +1,49 @@
 version: '3.8'
 
 services:
+  # FastAPI Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vk_monitor_app_dev
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=true
+      - POSTGRES_HOST=postgres
+      - POSTGRES_DB=${POSTGRES_DB:-vk_monitor_dev}
+      - POSTGRES_USER=${POSTGRES_USER:-vk_monitor}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - REDIS_HOST=redis
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - default
+
   postgres:
     image: postgres:17-alpine
     container_name: vk_monitor_postgres_dev
     environment:
-      POSTGRES_DB: vk_monitor_dev
-      POSTGRES_USER: vk_monitor
-      POSTGRES_PASSWORD: dev_password_123
+      POSTGRES_DB: ${POSTGRES_DB:-vk_monitor_dev}
+      POSTGRES_USER: ${POSTGRES_USER:-vk_monitor}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+    env_file:
+      - .env
     ports:
       - "5432:5432"
     volumes:
@@ -24,7 +59,9 @@ services:
   redis:
     image: redis:7-alpine
     container_name: vk_monitor_redis_dev
-    command: redis-server --appendonly yes --requirepass dev_redis_password
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    env_file:
+      - .env
     ports:
       - "6379:6379"
     volumes:
