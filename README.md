@@ -1,9 +1,9 @@
 # 🚀 VK Comments Parser
 
-> **Современная система мониторинга комментариев ВКонтакте с FastAPI и Poetry**
+> **Современная система мониторинга комментариев ВКонтакте с FastAPI и uv**
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
-[![Poetry](https://img.shields.io/badge/poetry-1.8+-blue.svg)](https://python-poetry.org/)
+[![uv](https://img.shields.io/badge/uv-0.7+-green.svg)](https://github.com/astral-sh/uv)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-green.svg)](https://fastapi.tiangolo.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
@@ -15,7 +15,7 @@
 
 ### 🔍 **VK API Integration**
 - Мониторинг комментариев в группах ВКонтакте
-- Поиск по ключевым словам 
+- Поиск по ключевым словам
 - Получение информации о пользователях и группах
 - Rate limiting и обработка ошибок API
 
@@ -46,7 +46,7 @@
 
 ### 📋 Требования
 - Python 3.11+
-- Poetry 1.8+
+- uv 0.7+
 - PostgreSQL 15+
 - Redis 7+
 
@@ -58,12 +58,12 @@ git clone <repository-url>
 cd parser
 ```
 
-2. **Установка Poetry** (если не установлен)
+2. **Установка uv** (если не установлен)
 ```bash
-# Linux/Mac
-curl -sSL https://install.python-poetry.org | python3 -
+# Linux/Mac/Windows
+curl -LsSf https://astral.sh/uv/install.sh | sh
 # или через pip
-pip install poetry
+pip install uv
 ```
 
 3. **Установка зависимостей**
@@ -71,8 +71,8 @@ pip install poetry
 # Development окружение
 make setup-dev
 # или напрямую
-poetry install --with=dev
-poetry run pre-commit install
+uv sync --all-extras
+uv run pre-commit install
 ```
 
 4. **Настройка окружения**
@@ -99,7 +99,7 @@ make db-upgrade
 # Development сервер
 make dev
 # или
-poetry run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 🎉 **Готово!** Приложение доступно по http://localhost:8000
@@ -112,14 +112,14 @@ poetry run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
 ## 🛠️ Development Commands
 
-Poetry и Makefile предоставляют удобные команды для разработки:
+uv и Makefile предоставляют удобные команды для разработки:
 
 ### 📦 **Управление зависимостями**
 ```bash
 # Установка production зависимостей
 make install
 
-# Установка development зависимостей  
+# Установка development зависимостей
 make install-dev
 
 # Обновление зависимостей
@@ -135,13 +135,13 @@ make requirements-export
 make test
 
 # Быстрые тесты без coverage
-make test-fast  
+make test-fast
 
 # Только integration тесты
 make test-integration
 
 # Запуск конкретного теста
-poetry run pytest tests/test_api/test_vk.py::test_get_group_info -v
+uv run pytest tests/test_api/test_vk.py::test_get_group_info -v
 ```
 
 ### 🔍 **Code Quality**
@@ -185,7 +185,7 @@ make docker-build
 # Запуск в development режиме
 make docker-dev
 
-# Запуск в production режиме  
+# Запуск в production режиме
 make docker-prod
 
 # Просмотр логов
@@ -284,7 +284,7 @@ prod = "gunicorn app.main:app -w 4 -k uvicorn.workers.UvicornWorker"
 
 ### GitHub Actions
 - ✅ Автоматическое тестирование
-- 🔍 Code quality проверки  
+- 🔍 Code quality проверки
 - 🔒 Security scanning
 - 🐳 Docker builds
 - 📊 Coverage reporting
@@ -313,7 +313,7 @@ poetry run gunicorn app.main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.
 
 ### Code Style
 - ✅ **Black** для форматирования
-- 🔍 **Ruff** для linting  
+- 🔍 **Ruff** для linting
 - 🎯 **mypy** для type checking
 - 🛡️ **Bandit** для безопасности
 - 📝 **Docstrings** для всех публичных методов
@@ -378,4 +378,4 @@ poetry run pytest tests/unit/ -v
 
 💡 **Нужна помощь?** Создайте [Issue](../../issues) или обратитесь к [документации API](http://localhost:8000/docs)
 
-🚀 **Готов к продакшену!** Следуйте best practices и наслаждайтесь современной разработкой на Python! 
+🚀 **Готов к продакшену!** Следуйте best practices и наслаждайтесь современной разработкой на Python!
