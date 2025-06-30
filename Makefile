@@ -228,4 +228,4 @@ requirements-export: ## Export requirements for legacy systems
 	$(POETRY) export -f requirements.txt --with=dev --output requirements-dev.txt
 	$(POETRY) export -f requirements.txt --with=production --output requirements-prod.txt
 
-poetry-to-pip: requirements-export ## Convert Poetry to pip requirements 
+poetry-to-pip: requirements-export ## Convert Poetry to pip requirements

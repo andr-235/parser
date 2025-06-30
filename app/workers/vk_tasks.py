@@ -2,7 +2,6 @@
 
 import asyncio
 import logging
-from typing import Dict, List, Optional
 
 from celery import current_task
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
@@ -30,7 +29,7 @@ async def get_db_session() -> AsyncSession:
 
 @celery_app.task(bind=True, name="vk_tasks.scan_group_comments")
 def scan_group_comments(
-    self, group_id: int, keywords: List[str], monitor_task_id: Optional[str] = None
+    self, group_id: int, keywords: list[str], monitor_task_id: str | None = None
 ):
     """
     Scan VK group comments for keywords.
@@ -53,7 +52,7 @@ def scan_group_comments(
         return result
 
     except Exception as e:
-        logger.error(f"Error scanning group {group_id}: {e}")
+        logger.exception(f"Error scanning group {group_id}: {e}")
         current_task.update_state(
             state="FAILURE", meta={"error": str(e), "group_id": group_id}
         )
@@ -61,8 +60,8 @@ def scan_group_comments(
 
 
 async def _scan_group_comments_async(
-    group_id: int, keywords: List[str], monitor_task_id: Optional[str] = None
-) -> Dict:
+    group_id: int, keywords: list[str], monitor_task_id: str | None = None
+) -> dict:
     """Async implementation of comment scanning."""
     async with AsyncSessionLocal() as db:
         try:
@@ -124,7 +123,7 @@ async def _scan_group_comments_async(
             }
 
         except Exception as e:
-            logger.error(f"Error in async scan: {e}")
+            logger.exception(f"Error in async scan: {e}")
             raise
 
 
@@ -151,7 +150,7 @@ def sync_vk_group(
         return result
 
     except Exception as e:
-        logger.error(f"Error syncing group {group_id}: {e}")
+        logger.exception(f"Error syncing group {group_id}: {e}")
         current_task.update_state(
             state="FAILURE", meta={"error": str(e), "group_id": group_id}
         )
@@ -160,7 +159,7 @@ def sync_vk_group(
 
 async def _sync_vk_group_async(
     group_id: int, posts_count: int, comments_per_post: int
-) -> Dict:
+) -> dict:
     """Async implementation of group synchronization."""
     async with AsyncSessionLocal() as db:
         try:
@@ -215,7 +214,7 @@ async def _sync_vk_group_async(
             }
 
         except Exception as e:
-            logger.error(f"Error in async group sync: {e}")
+            logger.exception(f"Error in async group sync: {e}")
             raise
 
 
@@ -240,14 +239,14 @@ def fetch_vk_posts(self, group_id: int, count: int = 50, offset: int = 0):
         return result
 
     except Exception as e:
-        logger.error(f"Error fetching posts for group {group_id}: {e}")
+        logger.exception(f"Error fetching posts for group {group_id}: {e}")
         current_task.update_state(
             state="FAILURE", meta={"error": str(e), "group_id": group_id}
         )
         raise
 
 
-async def _fetch_vk_posts_async(group_id: int, count: int, offset: int) -> Dict:
+async def _fetch_vk_posts_async(group_id: int, count: int, offset: int) -> dict:
     """Async implementation of posts fetching."""
     async with AsyncSessionLocal() as db:
         try:
@@ -278,5 +277,5 @@ async def _fetch_vk_posts_async(group_id: int, count: int, offset: int) -> Dict:
             }
 
         except Exception as e:
-            logger.error(f"Error in async posts fetch: {e}")
+            logger.exception(f"Error in async posts fetch: {e}")
             raise

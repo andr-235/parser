@@ -252,41 +252,39 @@ async def _cleanup_old_data_async(days_to_keep: int) -> Dict:
     try:
         cutoff_date = datetime.utcnow() - timedelta(days=days_to_keep)
 
-            # TODO: Implement cleanup logic based on your data retention policy
-            # Example: Delete old comments, matches, etc.
+        # In a real implementation, you would:
+        # - Query the database for old records
+        # - Delete records older than cutoff_date
+        # - Return statistics about what was cleaned up
 
-            logger.info(f"Data cleanup would remove data older than {cutoff_date}")
+        # Example: Delete old comments, matches, etc.
 
-            return {
-                "status": "completed",
-                "cutoff_date": cutoff_date.isoformat(),
-                "days_kept": days_to_keep,
-                "note": "Cleanup logic not yet implemented",
-            }
+        logger.info(f"Data cleanup would remove data older than {cutoff_date}")
 
-        except Exception as e:
-            logger.error(f"Error in cleanup async: {e}")
-            raise
+        return {
+            "status": "success",
+            "cutoff_date": cutoff_date.isoformat(),
+            "cleanup_summary": "Dry run - no data actually removed",
+        }
+    except Exception as e:
+        logger.exception(f"Error in cleanup task: {e}")
+        raise
 
 
 @celery_app.task(bind=True, name="monitoring_tasks.health_check")
 def health_check(self):
     """
-    Health check task for Celery workers.
-    Can be used to verify worker functionality.
+    Health check task to verify Celery workers are functioning.
+
+    Returns:
+        dict: Health status information
     """
     try:
-        current_task.update_state(state="PROGRESS", meta={"stage": "checking"})
-
-        # Simple health check
         return {
             "status": "healthy",
-            "timestamp": datetime.utcnow().isoformat(),
-            "worker_id": current_task.request.id,
-            "message": "Celery worker is operational",
+            "worker_id": self.request.id,
+            "timestamp": datetime.now().isoformat(),
         }
-
     except Exception as e:
-        logger.error(f"Health check failed: {e}")
-        current_task.update_state(state="FAILURE", meta={"error": str(e)})
+        logger.exception(f"Error in health check: {e}")
         raise

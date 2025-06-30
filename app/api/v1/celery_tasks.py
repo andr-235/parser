@@ -1,7 +1,6 @@
 """API endpoints for Celery task management."""
 
 import logging
-from typing import Dict, List, Optional
 
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
@@ -23,8 +22,8 @@ class VKScanRequest(BaseModel):
     """Request model for VK scanning task."""
 
     group_id: int
-    keywords: List[str]
-    monitor_task_id: Optional[str] = None
+    keywords: list[str]
+    monitor_task_id: str | None = None
 
 
 class VKSyncRequest(BaseModel):
@@ -47,7 +46,7 @@ class TaskResult(BaseModel):
     task_id: str
     status: str
     message: str
-    result: Optional[Dict] = None
+    result: dict | None = None
 
 
 @router.post("/vk/scan", response_model=TaskResult)
@@ -80,10 +79,10 @@ async def start_vk_scan(request: VKScanRequest):
         )
 
     except Exception as e:
-        logger.error(f"Error starting VK scan: {e}")
+        logger.exception(f"Error starting VK scan: {e}")
         raise HTTPException(
-            status_code=500, detail=f"Failed to start VK scan: {str(e)}"
-        )
+            status_code=500, detail=f"Failed to start VK scan: {e!s}"
+        ) from e
 
 
 @router.post("/vk/sync", response_model=TaskResult)
@@ -115,10 +114,10 @@ async def start_vk_sync(request: VKSyncRequest):
         )
 
     except Exception as e:
-        logger.error(f"Error starting VK sync: {e}")
+        logger.exception(f"Error starting VK sync: {e}")
         raise HTTPException(
-            status_code=500, detail=f"Failed to start VK sync: {str(e)}"
-        )
+            status_code=500, detail=f"Failed to start VK sync: {e!s}"
+        ) from e
 
 
 @router.post("/vk/fetch-posts", response_model=TaskResult)
@@ -146,10 +145,10 @@ async def start_vk_fetch_posts(
         )
 
     except Exception as e:
-        logger.error(f"Error starting VK posts fetch: {e}")
+        logger.exception(f"Error starting VK posts fetch: {e}")
         raise HTTPException(
-            status_code=500, detail=f"Failed to start VK posts fetch: {str(e)}"
-        )
+            status_code=500, detail=f"Failed to start VK posts fetch: {e!s}"
+        ) from e
 
 
 @router.post("/monitoring/execute", response_model=TaskResult)
@@ -175,10 +174,10 @@ async def start_monitoring_task(request: MonitoringTaskRequest):
         )
 
     except Exception as e:
-        logger.error(f"Error starting monitoring task: {e}")
+        logger.exception(f"Error starting monitoring task: {e}")
         raise HTTPException(
-            status_code=500, detail=f"Failed to start monitoring task: {str(e)}"
-        )
+            status_code=500, detail=f"Failed to start monitoring task: {e!s}"
+        ) from e
 
 
 @router.post("/monitoring/run-scheduled", response_model=TaskResult)
@@ -202,15 +201,15 @@ async def start_scheduled_monitoring():
         )
 
     except Exception as e:
-        logger.error(f"Error starting scheduled monitoring: {e}")
+        logger.exception(f"Error starting scheduled monitoring: {e}")
         raise HTTPException(
-            status_code=500, detail=f"Failed to start scheduled monitoring: {str(e)}"
-        )
+            status_code=500, detail=f"Failed to start scheduled monitoring: {e!s}"
+        ) from e
 
 
 @router.post("/cleanup", response_model=TaskResult)
 async def start_cleanup_task(
-    days_to_keep: int = Query(30, description="Number of days to keep data")
+    days_to_keep: int = Query(30, description="Number of days to keep data"),
 ):
     """
     Start a data cleanup task.
@@ -231,10 +230,10 @@ async def start_cleanup_task(
         )
 
     except Exception as e:
-        logger.error(f"Error starting cleanup task: {e}")
+        logger.exception(f"Error starting cleanup task: {e}")
         raise HTTPException(
-            status_code=500, detail=f"Failed to start cleanup task: {str(e)}"
-        )
+            status_code=500, detail=f"Failed to start cleanup task: {e!s}"
+        ) from e
 
 
 @router.get("/health", response_model=TaskResult)
@@ -258,10 +257,10 @@ async def start_health_check():
         )
 
     except Exception as e:
-        logger.error(f"Error starting health check: {e}")
+        logger.exception(f"Error starting health check: {e}")
         raise HTTPException(
-            status_code=500, detail=f"Failed to start health check: {str(e)}"
-        )
+            status_code=500, detail=f"Failed to start health check: {e!s}"
+        ) from e
 
 
 @router.get("/status/{task_id}")
@@ -298,10 +297,10 @@ async def get_task_status(task_id: str):
         return response
 
     except Exception as e:
-        logger.error(f"Error getting task status for {task_id}: {e}")
+        logger.exception(f"Error getting task status for {task_id}: {e}")
         raise HTTPException(
-            status_code=500, detail=f"Failed to get task status: {str(e)}"
-        )
+            status_code=500, detail=f"Failed to get task status: {e!s}"
+        ) from e
 
 
 @router.get("/active-tasks")
@@ -341,10 +340,10 @@ async def get_active_tasks():
         }
 
     except Exception as e:
-        logger.error(f"Error getting active tasks: {e}")
+        logger.exception(f"Error getting active tasks: {e}")
         raise HTTPException(
-            status_code=500, detail=f"Failed to get active tasks: {str(e)}"
-        )
+            status_code=500, detail=f"Failed to get active tasks: {e!s}"
+        ) from e
 
 
 @router.get("/workers")
@@ -385,7 +384,7 @@ async def get_worker_stats():
         }
 
     except Exception as e:
-        logger.error(f"Error getting worker stats: {e}")
+        logger.exception(f"Error getting worker stats: {e}")
         raise HTTPException(
-            status_code=500, detail=f"Failed to get worker stats: {str(e)}"
-        )
+            status_code=500, detail=f"Failed to get worker stats: {e!s}"
+        ) from e

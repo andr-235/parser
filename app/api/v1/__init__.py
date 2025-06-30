@@ -16,3 +16,6 @@ router.include_router(vk_test.router)  # VK API testing endpoints
 router.include_router(celery_tasks.router)  # Celery task management
 
 __all__ = ["router"]
+from .vk_test import router as vk_test_router
+
+api_router.include_router(vk_test_router)

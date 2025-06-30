@@ -1,7 +1,11 @@
 """Celery application configuration and setup."""
 
+import logging
+
 from celery import Celery
 from kombu import Queue
+
+logger = logging.getLogger(__name__)
 
 from app.core.config import settings
 
@@ -75,7 +79,7 @@ celery_app.autodiscover_tasks(
 @celery_app.task(bind=True)
 def debug_task(self):
     """Debug task for testing Celery setup."""
-    print(f"Request: {self.request!r}")
+    logger.info(f"Debug task request: {self.request!r}")
     return {"status": "success", "message": "Celery is working!"}
 
 

@@ -26,17 +26,13 @@ class Settings(BaseSettings):
     PORT: int = Field(default=8000, description="Server port")
 
     # Database Configuration
-    DATABASE_URL: str = Field(
-        default="postgresql+asyncpg://vk_monitor:vk_monitor_password"
-        "@postgres:5432/vk_monitor_db",
-        description="Database connection URL",
+    DATABASE_URL: str = (
+        "postgresql+asyncpg://vk_monitor:dev_password_123@localhost:5432/vk_monitor_dev"
     )
-    DATABASE_ECHO: bool = Field(default=False, description="Echo SQL queries")
+    DATABASE_ECHO: bool = False
 
     # Redis Configuration
-    REDIS_URL: str = Field(
-        default="redis://redis:6379/0", description="Redis connection URL"
-    )
+    REDIS_URL: str = "redis://:dev_redis_password@localhost:6379/0"
 
     # Security Configuration
     SECRET_KEY: str = Field(
@@ -55,36 +51,22 @@ class Settings(BaseSettings):
     )
 
     # VK API Configuration
-    VK_API_TOKEN: Optional[str] = Field(default=None, description="VK API access token")
-    VK_API_VERSION: str = Field(default="5.131", description="VK API version")
-    VK_API_REQUESTS_PER_SECOND: int = Field(
-        default=3, description="VK API rate limit (requests per second)"
-    )
-    VK_API_TIMEOUT: int = Field(
-        default=30, description="VK API request timeout in seconds"
-    )
-    VK_GROUP_ID: Optional[int] = Field(
-        default=None, description="Default VK group ID for monitoring"
-    )
+    VK_ACCESS_TOKEN: str = "your_vk_access_token_here"
+    VK_API_VERSION: str = "5.131"
+    VK_REQUESTS_PER_SECOND: int = 3
+    VK_APP_ID: str = "your_vk_app_id_here"
+    VK_MAX_POSTS_PER_REQUEST: int = 100
+    VK_MAX_COMMENTS_PER_REQUEST: int = 100
+    VK_TIMEOUT_SECONDS: int = 30
 
     # Background Tasks Configuration
-    CELERY_BROKER_URL: str = Field(
-        default="redis://redis:6379/1", description="Celery broker URL"
-    )
-    CELERY_RESULT_BACKEND: str = Field(
-        default="redis://redis:6379/2", description="Celery result backend URL"
-    )
+    CELERY_BROKER_URL: str = "redis://:dev_redis_password@localhost:6379/1"
+    CELERY_RESULT_BACKEND: str = "redis://:dev_redis_password@localhost:6379/2"
 
     # Monitoring Configuration
-    CHECK_INTERVAL_SECONDS: int = Field(
-        default=300, description="Default check interval for monitoring tasks (seconds)"
-    )
-    MAX_COMMENTS_PER_REQUEST: int = Field(
-        default=100, description="Maximum comments to fetch per VK API request"
-    )
-    SENTIMENT_ANALYSIS_ENABLED: bool = Field(
-        default=True, description="Enable sentiment analysis for comments"
-    )
+    MONITORING_ENABLED: bool = True
+    MONITORING_INTERVAL_MINUTES: int = 5
+    DATA_RETENTION_DAYS: int = 30
 
     # Logging Configuration
     LOG_LEVEL: str = Field(default="INFO", description="Logging level")
