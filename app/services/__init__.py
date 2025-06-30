@@ -3,4 +3,4 @@
 from app.services.monitoring import MonitoringService
 from app.services.vk import VKService
 
-__all__ = ["VKService", "MonitoringService"]
+__all__ = ["MonitoringService", "VKService"]

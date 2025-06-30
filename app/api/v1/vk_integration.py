@@ -1,7 +1,6 @@
 """VK Integration API endpoints for real data fetching."""
 
 import logging
-from typing import List
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from pydantic import BaseModel
@@ -29,7 +28,7 @@ class VKKeywordSearchRequest(BaseModel):
     """Request model for keyword search."""
 
     group_id: int
-    keywords: List[str]
+    keywords: list[str]
     monitor_task_id: str
     limit: int = 100
 
@@ -53,11 +52,11 @@ async def check_vk_health():
                 "message": "VK API token invalid or API unreachable",
             }
     except Exception as e:
-        logger.error(f"VK health check failed: {e}")
+        logger.exception(f"VK health check failed: {e}")
         return {
             "status": "error",
             "vk_api": "error",
-            "message": f"VK API error: {str(e)}",
+            "message": f"VK API error: {e!s}",
         }
 
 
@@ -80,10 +79,8 @@ async def test_vk_connection():
                 "token_valid": False,
             }
     except Exception as e:
-        logger.error(f"VK connection test failed: {e}")
-        raise HTTPException(
-            status_code=500, detail=f"VK API connection failed: {str(e)}"
-        )
+        logger.exception(f"VK connection test failed: {e}")
+        raise HTTPException(status_code=500, detail=f"VK API connection failed: {e!s}")
 
 
 @router.get("/group/{group_id}/info")
@@ -104,9 +101,9 @@ async def get_group_info(group_id: int, db: AsyncSession = Depends(get_db)):
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error getting group info for {group_id}: {e}")
+        logger.exception(f"Error getting group info for {group_id}: {e}")
         raise HTTPException(
-            status_code=500, detail=f"Failed to fetch group information: {str(e)}"
+            status_code=500, detail=f"Failed to fetch group information: {e!s}"
         )
 
 
@@ -124,9 +121,9 @@ async def get_group_info_from_vk(group_id: int):
 
         return {"status": "success", "data": group_data, "source": "VK API"}
     except Exception as e:
-        logger.error(f"Error fetching group {group_id} from VK API: {e}")
+        logger.exception(f"Error fetching group {group_id} from VK API: {e}")
         raise HTTPException(
-            status_code=500, detail=f"Failed to fetch group data: {str(e)}"
+            status_code=500, detail=f"Failed to fetch group data: {e!s}"
         )
 
 
@@ -160,8 +157,8 @@ async def sync_vk_data(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error starting sync: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to start sync: {str(e)}")
+        logger.exception(f"Error starting sync: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to start sync: {e!s}")
 
 
 @router.post("/search-keywords")
@@ -183,9 +180,9 @@ async def search_keywords_in_vk(
         }
 
     except Exception as e:
-        logger.error(f"Error starting keyword search: {e}")
+        logger.exception(f"Error starting keyword search: {e}")
         raise HTTPException(
-            status_code=500, detail=f"Failed to start keyword search: {str(e)}"
+            status_code=500, detail=f"Failed to start keyword search: {e!s}"
         )
 
 
@@ -221,8 +218,8 @@ async def sync_group_posts_from_vk(
             ],
         }
     except Exception as e:
-        logger.error(f"Error syncing posts for group {group_id}: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to sync posts: {str(e)}")
+        logger.exception(f"Error syncing posts for group {group_id}: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to sync posts: {e!s}")
 
 
 @router.post("/group/{group_id}/post/{post_id}/sync-comments")
@@ -259,16 +256,14 @@ async def sync_post_comments_from_vk(
             ],
         }
     except Exception as e:
-        logger.error(f"Error syncing comments for post {post_id}: {e}")
-        raise HTTPException(
-            status_code=500, detail=f"Failed to sync comments: {str(e)}"
-        )
+        logger.exception(f"Error syncing comments for post {post_id}: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to sync comments: {e!s}")
 
 
 @router.post("/group/{group_id}/search-keywords")
-async def search_keywords_in_vk(
+async def search_keywords_in_group(
     group_id: int,
-    keywords: List[str] = Query(..., description="Keywords to search for"),
+    keywords: list[str] = Query(..., description="Keywords to search for"),
     limit: int = Query(50, ge=1, le=200, description="Maximum number of results"),
 ):
     """Search for keywords in VK group directly from VK API."""
@@ -297,13 +292,11 @@ async def search_keywords_in_vk(
             ],
         }
     except Exception as e:
-        logger.error(f"Error searching keywords in group {group_id}: {e}")
-        raise HTTPException(
-            status_code=500, detail=f"Failed to search keywords: {str(e)}"
-        )
+        logger.exception(f"Error searching keywords in group {group_id}: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to search keywords: {e!s}")
 
 
-@router.get("/group/{group_id}/posts", response_model=List[VKPostResponse])
+@router.get("/group/{group_id}/posts", response_model=list[VKPostResponse])
 async def get_synced_posts(
     group_id: int,
     skip: int = Query(0, ge=0),
@@ -312,18 +305,18 @@ async def get_synced_posts(
 ):
     """Get synced VK posts from database."""
     try:
-        vk_service = VKService(db)
+        VKService(db)
 
         # This would need to be implemented in VKService
         # For now, return empty list with TODO
         return []
 
     except Exception as e:
-        logger.error(f"Error getting posts for group {group_id}: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get posts: {str(e)}")
+        logger.exception(f"Error getting posts for group {group_id}: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get posts: {e!s}")
 
 
-@router.get("/group/{group_id}/comments", response_model=List[VKCommentResponse])
+@router.get("/group/{group_id}/comments", response_model=list[VKCommentResponse])
 async def get_synced_comments(
     group_id: int,
     skip: int = Query(0, ge=0),
@@ -346,8 +339,8 @@ async def get_synced_comments(
         ]
 
     except Exception as e:
-        logger.error(f"Error getting comments for group {group_id}: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get comments: {str(e)}")
+        logger.exception(f"Error getting comments for group {group_id}: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get comments: {e!s}")
 
 
 @router.get("/user/{user_id}", response_model=VKUserResponse)
@@ -376,8 +369,8 @@ async def get_user_info(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error getting user {user_id}: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get user: {str(e)}")
+        logger.exception(f"Error getting user {user_id}: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get user: {e!s}")
 
 
 @router.get("/user/{user_id}/sync")
@@ -405,8 +398,8 @@ async def sync_user_from_vk(user_id: int, db: AsyncSession = Depends(get_db)):
             },
         }
     except Exception as e:
-        logger.error(f"Error syncing user {user_id}: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to sync user: {str(e)}")
+        logger.exception(f"Error syncing user {user_id}: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to sync user: {e!s}")
 
 
 @router.post("/monitor-task/{task_id}/run")
@@ -437,9 +430,9 @@ async def run_monitoring_task(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error running monitoring task {task_id}: {e}")
+        logger.exception(f"Error running monitoring task {task_id}: {e}")
         raise HTTPException(
-            status_code=500, detail=f"Failed to run monitoring task: {str(e)}"
+            status_code=500, detail=f"Failed to run monitoring task: {e!s}"
         )
 
 
@@ -470,7 +463,7 @@ async def _background_sync_task(sync_request: VKSyncRequest, db: AsyncSession):
         logger.info(f"Sync completed: {len(posts)} posts, {total_comments} comments")
 
     except Exception as e:
-        logger.error(f"Background sync failed: {e}")
+        logger.exception(f"Background sync failed: {e}")
 
 
 async def _background_keyword_search(
@@ -494,7 +487,7 @@ async def _background_keyword_search(
         logger.info(f"Keyword search completed: {len(matches)} matches found")
 
     except Exception as e:
-        logger.error(f"Background keyword search failed: {e}")
+        logger.exception(f"Background keyword search failed: {e}")
 
 
 async def _background_monitoring_task(task_id: str, db: AsyncSession):
@@ -526,7 +519,7 @@ async def _background_monitoring_task(task_id: str, db: AsyncSession):
             logger.info(f"Monitoring task {task_id} completed: {len(matches)} matches")
 
     except Exception as e:
-        logger.error(f"Background monitoring task {task_id} failed: {e}")
+        logger.exception(f"Background monitoring task {task_id} failed: {e}")
 
 
 @router.get("/stats/sync-status")
@@ -545,10 +538,8 @@ async def get_sync_status(db: AsyncSession = Depends(get_db)):
         }
 
     except Exception as e:
-        logger.error(f"Error getting sync status: {e}")
-        raise HTTPException(
-            status_code=500, detail=f"Failed to get sync status: {str(e)}"
-        )
+        logger.exception(f"Error getting sync status: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get sync status: {e!s}")
 
 
 @router.get("/health/vk-api")
@@ -568,7 +559,7 @@ async def vk_api_health():
             "message": "VK API is accessible" if is_valid else "VK API token invalid",
         }
     except Exception as e:
-        logger.error(f"VK API health check failed: {e}")
+        logger.exception(f"VK API health check failed: {e}")
         return {
             "status": "unhealthy",
             "vk_api_token_valid": False,

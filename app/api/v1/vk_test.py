@@ -3,7 +3,7 @@ VK API testing endpoints for Phase 3 development and validation.
 """
 
 import logging
-from typing import Any, Dict, List
+from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
@@ -18,8 +18,8 @@ class VKTestResponse(BaseModel):
 
     success: bool
     message: str
-    data: Dict[str, Any] = {}
-    errors: List[str] = []
+    data: dict[str, Any] = {}
+    errors: list[str] = []
 
 
 @router.get("/health", response_model=VKTestResponse)
@@ -49,7 +49,7 @@ async def vk_api_health():
 
 @router.get("/group-info", response_model=VKTestResponse)
 async def test_group_info(
-    group_id: int = Query(..., description="VK group ID to test")
+    group_id: int = Query(..., description="VK group ID to test"),
 ):
     """
     Test getting VK group information.
@@ -104,17 +104,16 @@ async def test_search_comments(
         # Mock search results
         # TODO: Replace with real VK API search
 
-        mock_comments = []
-        for i in range(min(3, len(keyword_list))):
-            mock_comments.append(
-                {
-                    "id": f"comment_{i}",
-                    "post_id": f"post_{i}",
-                    "text": f"This is a test comment containing {keyword_list[i]}",
-                    "date": 1640995200 + i * 3600,  # Mock timestamps
-                    "from_id": 12345 + i,
-                }
-            )
+        mock_comments = [
+            {
+                "id": f"comment_{i}",
+                "post_id": f"post_{i}",
+                "text": f"This is a test comment containing {keyword_list[i]}",
+                "date": 1640995200 + i * 3600,  # Mock timestamps
+                "from_id": 12345 + i,
+            }
+            for i in range(min(3, len(keyword_list)))
+        ]
 
         search_stats = {
             "posts_checked": max_posts,

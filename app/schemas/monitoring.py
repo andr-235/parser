@@ -1,7 +1,6 @@
 """Pydantic schemas for monitoring models."""
 
 from datetime import datetime
-from typing import List, Optional
 
 from pydantic import Field
 
@@ -14,7 +13,7 @@ class MonitorTaskBase(BaseSchema):
     """Base Monitor Task schema."""
 
     name: str = Field(..., max_length=200, description="Task name")
-    description: Optional[str] = Field(None, description="Task description")
+    description: str | None = Field(None, description="Task description")
     target_type: str = Field(
         ..., max_length=20, description="Target type (group, user, post)"
     )
@@ -25,14 +24,14 @@ class MonitorTaskBase(BaseSchema):
     max_comments_per_check: int = Field(
         100, ge=1, le=1000, description="Max comments per check"
     )
-    start_date: Optional[datetime] = Field(None, description="Start monitoring date")
-    end_date: Optional[datetime] = Field(None, description="End monitoring date")
+    start_date: datetime | None = Field(None, description="Start monitoring date")
+    end_date: datetime | None = Field(None, description="End monitoring date")
 
 
 class MonitorTaskCreate(MonitorTaskBase):
     """Monitor Task creation schema."""
 
-    keywords: List[str] = Field(
+    keywords: list[str] = Field(
         ..., min_length=1, description="List of keywords to monitor"
     )
 
@@ -40,17 +39,17 @@ class MonitorTaskCreate(MonitorTaskBase):
 class MonitorTaskUpdate(BaseSchema):
     """Monitor Task update schema."""
 
-    name: Optional[str] = Field(None, max_length=200, description="Task name")
-    description: Optional[str] = Field(None, description="Task description")
-    status: Optional[MonitorStatus] = Field(None, description="Task status")
-    check_interval_minutes: Optional[int] = Field(
+    name: str | None = Field(None, max_length=200, description="Task name")
+    description: str | None = Field(None, description="Task description")
+    status: MonitorStatus | None = Field(None, description="Task status")
+    check_interval_minutes: int | None = Field(
         None, ge=1, le=1440, description="Check interval in minutes"
     )
-    max_comments_per_check: Optional[int] = Field(
+    max_comments_per_check: int | None = Field(
         None, ge=1, le=1000, description="Max comments per check"
     )
-    start_date: Optional[datetime] = Field(None, description="Start monitoring date")
-    end_date: Optional[datetime] = Field(None, description="End monitoring date")
+    start_date: datetime | None = Field(None, description="Start monitoring date")
+    end_date: datetime | None = Field(None, description="End monitoring date")
 
 
 class MonitorTaskResponse(MonitorTaskBase, BaseResponseSchema):
@@ -59,8 +58,8 @@ class MonitorTaskResponse(MonitorTaskBase, BaseResponseSchema):
     status: MonitorStatus = Field(..., description="Task status")
     total_comments_found: int = Field(0, description="Total comments found")
     total_matches_found: int = Field(0, description="Total matches found")
-    last_check_at: Optional[datetime] = Field(None, description="Last check timestamp")
-    last_error: Optional[str] = Field(None, description="Last error message")
+    last_check_at: datetime | None = Field(None, description="Last check timestamp")
+    last_error: str | None = Field(None, description="Last error message")
 
 
 # Keyword Schemas
@@ -76,15 +75,13 @@ class KeywordBase(BaseSchema):
 class KeywordCreate(KeywordBase):
     """Keyword creation schema."""
 
-    pass
-
 
 class KeywordResponse(KeywordBase, BaseResponseSchema):
     """Keyword response schema."""
 
     monitor_task_id: str = Field(..., description="Monitor task ID")
     match_count: int = Field(0, description="Number of matches")
-    last_match_at: Optional[datetime] = Field(None, description="Last match timestamp")
+    last_match_at: datetime | None = Field(None, description="Last match timestamp")
 
 
 # Comment Match Schemas
@@ -97,8 +94,8 @@ class CommentMatchBase(BaseSchema):
         1.0, ge=0.0, le=1.0, description="Match confidence score"
     )
     is_reviewed: bool = Field(False, description="Is match reviewed")
-    is_relevant: Optional[bool] = Field(None, description="Is match relevant")
-    notes: Optional[str] = Field(None, description="Review notes")
+    is_relevant: bool | None = Field(None, description="Is match relevant")
+    notes: str | None = Field(None, description="Review notes")
 
 
 class CommentMatchCreate(CommentMatchBase):
@@ -120,11 +117,10 @@ class CommentMatchResponse(CommentMatchBase, BaseResponseSchema):
 class MonitorTaskWithKeywords(MonitorTaskResponse):
     """Monitor Task with keywords."""
 
-    keywords: List[KeywordResponse] = Field(..., description="Task keywords")
+    keywords: list[KeywordResponse] = Field(..., description="Task keywords")
 
 
 class CommentMatchWithDetails(CommentMatchResponse):
     """Comment Match with keyword and comment details."""
 
     keyword: KeywordResponse = Field(..., description="Matched keyword")
-    # comment: VKCommentResponse = Field(..., description="Matched comment")

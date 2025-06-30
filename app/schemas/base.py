@@ -2,7 +2,7 @@
 
 import uuid
 from datetime import datetime
-from typing import Any, Dict
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict
 
@@ -34,8 +34,6 @@ class UUIDSchema(BaseSchema):
 class BaseResponseSchema(UUIDSchema, TimestampSchema):
     """Base response schema with ID and timestamps."""
 
-    pass
-
 
 class PaginationSchema(BaseSchema):
     """Pagination parameters schema."""
@@ -52,7 +50,7 @@ class PaginationSchema(BaseSchema):
 class PaginatedResponseSchema(BaseSchema):
     """Paginated response schema."""
 
-    items: list[Dict[str, Any]]
+    items: list[dict[str, Any]]
     total: int
     page: int
     size: int
@@ -61,7 +59,7 @@ class PaginatedResponseSchema(BaseSchema):
     @classmethod
     def create(
         cls,
-        items: list[Dict[str, Any]],
+        items: list[dict[str, Any]],
         total: int,
         page: int,
         size: int,

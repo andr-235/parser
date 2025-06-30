@@ -3,7 +3,6 @@
 import asyncio
 import logging
 from datetime import datetime, timedelta
-from typing import Dict, List
 
 from celery import current_task
 from sqlalchemy import select
@@ -42,12 +41,12 @@ def run_scheduled_monitoring(self):
         return result
 
     except Exception as e:
-        logger.error(f"Error in scheduled monitoring: {e}")
+        logger.exception(f"Error in scheduled monitoring: {e}")
         current_task.update_state(state="FAILURE", meta={"error": str(e)})
         raise
 
 
-async def _run_scheduled_monitoring_async() -> Dict:
+async def _run_scheduled_monitoring_async() -> dict:
     """Async implementation of scheduled monitoring."""
     async with AsyncSessionLocal() as db:
         try:
@@ -107,7 +106,7 @@ async def _run_scheduled_monitoring_async() -> Dict:
             }
 
         except Exception as e:
-            logger.error(f"Error in scheduled monitoring async: {e}")
+            logger.exception(f"Error in scheduled monitoring async: {e}")
             raise
 
 
@@ -130,14 +129,14 @@ def execute_monitoring_task(self, task_id: str):
         return result
 
     except Exception as e:
-        logger.error(f"Error executing monitoring task {task_id}: {e}")
+        logger.exception(f"Error executing monitoring task {task_id}: {e}")
         current_task.update_state(
             state="FAILURE", meta={"error": str(e), "task_id": task_id}
         )
         raise
 
 
-async def _execute_monitoring_task_async(task_id: str) -> Dict:
+async def _execute_monitoring_task_async(task_id: str) -> dict:
     """Async implementation of single task execution."""
     async with AsyncSessionLocal() as db:
         try:
@@ -190,13 +189,13 @@ async def _execute_monitoring_task_async(task_id: str) -> Dict:
                 }
 
         except Exception as e:
-            logger.error(f"Error in monitoring task execution async: {e}")
+            logger.exception(f"Error in monitoring task execution async: {e}")
             raise
 
 
 async def _run_vk_scan_for_task(
-    group_id: int, keywords: List[str], task_id: str
-) -> Dict:
+    group_id: int, keywords: list[str], task_id: str
+) -> dict:
     """Run VK scan for monitoring task."""
     async with AsyncSessionLocal() as db:
         vk_service = VKService(db)
@@ -218,7 +217,7 @@ async def _run_vk_scan_for_task(
             }
 
         except Exception as e:
-            logger.error(f"Error in VK scan for task {task_id}: {e}")
+            logger.exception(f"Error in VK scan for task {task_id}: {e}")
             return {"status": "error", "error": str(e), "group_id": group_id}
 
 
@@ -242,12 +241,12 @@ def cleanup_old_data(self, days_to_keep: int = 30):
         return result
 
     except Exception as e:
-        logger.error(f"Error in data cleanup: {e}")
+        logger.exception(f"Error in data cleanup: {e}")
         current_task.update_state(state="FAILURE", meta={"error": str(e)})
         raise
 
 
-async def _cleanup_old_data_async(days_to_keep: int) -> Dict:
+async def _cleanup_old_data_async(days_to_keep: int) -> dict:
     """Async implementation of data cleanup."""
     try:
         cutoff_date = datetime.utcnow() - timedelta(days=days_to_keep)

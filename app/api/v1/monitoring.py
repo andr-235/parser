@@ -1,7 +1,6 @@
 """Monitoring API endpoints."""
 
 import uuid
-from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -10,7 +9,6 @@ from app.core.database import get_db
 from app.models.monitoring import MonitorStatus
 from app.schemas.base import PaginatedResponseSchema, PaginationSchema
 from app.schemas.monitoring import (
-    CommentMatchResponse,
     CommentMatchWithDetails,
     KeywordCreate,
     KeywordResponse,
@@ -168,11 +166,11 @@ async def pause_monitor_task(
     return MonitorTaskResponse.model_validate(updated_task)
 
 
-@router.get("/tasks/{task_id}/keywords", response_model=List[KeywordResponse])
+@router.get("/tasks/{task_id}/keywords", response_model=list[KeywordResponse])
 async def list_task_keywords(
     task_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
-) -> List[KeywordResponse]:
+) -> list[KeywordResponse]:
     """List keywords for a monitoring task."""
     monitoring_service = MonitoringService(db)
 

@@ -1,7 +1,6 @@
 """VK service for managing VK entities."""
 
 import uuid
-from typing import List, Optional, Tuple
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -18,19 +17,19 @@ class VKService:
         self.db = db
 
     # VK User methods
-    async def get_user_by_id(self, user_id: uuid.UUID) -> Optional[VKUser]:
+    async def get_user_by_id(self, user_id: uuid.UUID) -> VKUser | None:
         """Get VK user by internal ID."""
         result = await self.db.execute(select(VKUser).where(VKUser.id == user_id))
         return result.scalar_one_or_none()
 
-    async def get_user_by_vk_id(self, vk_id: int) -> Optional[VKUser]:
+    async def get_user_by_vk_id(self, vk_id: int) -> VKUser | None:
         """Get VK user by VK ID."""
         result = await self.db.execute(select(VKUser).where(VKUser.vk_id == vk_id))
         return result.scalar_one_or_none()
 
     async def get_users_paginated(
         self, offset: int = 0, limit: int = 50
-    ) -> Tuple[List[VKUser], int]:
+    ) -> tuple[list[VKUser], int]:
         """Get paginated list of VK users."""
         # Get total count
         count_result = await self.db.execute(select(func.count(VKUser.id)))
@@ -55,9 +54,7 @@ class VKService:
         await self.db.refresh(user)
         return user
 
-    async def update_user(
-        self, user_id: uuid.UUID, user_data: dict
-    ) -> Optional[VKUser]:
+    async def update_user(self, user_id: uuid.UUID, user_data: dict) -> VKUser | None:
         """Update VK user."""
         user = await self.get_user_by_id(user_id)
         if not user:
@@ -72,7 +69,7 @@ class VKService:
         return user
 
     # VK Post methods
-    async def get_post_by_id(self, post_id: uuid.UUID) -> Optional[VKPost]:
+    async def get_post_by_id(self, post_id: uuid.UUID) -> VKPost | None:
         """Get VK post by internal ID."""
         result = await self.db.execute(
             select(VKPost)
@@ -81,14 +78,14 @@ class VKService:
         )
         return result.scalar_one_or_none()
 
-    async def get_post_by_vk_id(self, vk_id: int) -> Optional[VKPost]:
+    async def get_post_by_vk_id(self, vk_id: int) -> VKPost | None:
         """Get VK post by VK ID."""
         result = await self.db.execute(select(VKPost).where(VKPost.vk_id == vk_id))
         return result.scalar_one_or_none()
 
     async def get_posts_paginated(
-        self, offset: int = 0, limit: int = 50, owner_id: Optional[int] = None
-    ) -> Tuple[List[VKPost], int]:
+        self, offset: int = 0, limit: int = 50, owner_id: int | None = None
+    ) -> tuple[list[VKPost], int]:
         """Get paginated list of VK posts."""
         query = select(VKPost).options(selectinload(VKPost.author))
         count_query = select(func.count(VKPost.id))
@@ -118,7 +115,7 @@ class VKService:
         return post
 
     # VK Comment methods
-    async def get_comment_by_id(self, comment_id: uuid.UUID) -> Optional[VKComment]:
+    async def get_comment_by_id(self, comment_id: uuid.UUID) -> VKComment | None:
         """Get VK comment by internal ID."""
         result = await self.db.execute(
             select(VKComment)
@@ -127,7 +124,7 @@ class VKService:
         )
         return result.scalar_one_or_none()
 
-    async def get_comment_by_vk_id(self, vk_id: int) -> Optional[VKComment]:
+    async def get_comment_by_vk_id(self, vk_id: int) -> VKComment | None:
         """Get VK comment by VK ID."""
         result = await self.db.execute(
             select(VKComment).where(VKComment.vk_id == vk_id)
@@ -138,10 +135,10 @@ class VKService:
         self,
         offset: int = 0,
         limit: int = 50,
-        post_vk_id: Optional[int] = None,
-        author_vk_id: Optional[int] = None,
-        contains_keywords: Optional[bool] = None,
-    ) -> Tuple[List[VKComment], int]:
+        post_vk_id: int | None = None,
+        author_vk_id: int | None = None,
+        contains_keywords: bool | None = None,
+    ) -> tuple[list[VKComment], int]:
         """Get paginated list of VK comments."""
         query = select(VKComment).options(
             selectinload(VKComment.author), selectinload(VKComment.post)
@@ -183,7 +180,7 @@ class VKService:
         await self.db.refresh(comment)
         return comment
 
-    async def mark_comments_processed(self, comment_ids: List[uuid.UUID]) -> int:
+    async def mark_comments_processed(self, comment_ids: list[uuid.UUID]) -> int:
         """Mark comments as processed."""
         from sqlalchemy import update
 
@@ -195,11 +192,11 @@ class VKService:
         await self.db.commit()
         return result.rowcount
 
-    async def get_unprocessed_comments(self, limit: int = 100) -> List[VKComment]:
+    async def get_unprocessed_comments(self, limit: int = 100) -> list[VKComment]:
         """Get unprocessed comments for analysis."""
         result = await self.db.execute(
             select(VKComment)
-            .where(VKComment.is_processed == False)
+            .where(VKComment.is_processed is False)
             .order_by(VKComment.created_at.asc())
             .limit(limit)
         )
@@ -210,7 +207,7 @@ class VKService:
         search_text: str,
         offset: int = 0,
         limit: int = 50,
-    ) -> Tuple[List[VKComment], int]:
+    ) -> tuple[list[VKComment], int]:
         """Search comments by text content."""
         # PostgreSQL full-text search
         query = (

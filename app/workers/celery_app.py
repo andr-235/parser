@@ -5,9 +5,9 @@ import logging
 from celery import Celery
 from kombu import Queue
 
-logger = logging.getLogger(__name__)
-
 from app.core.config import settings
+
+logger = logging.getLogger(__name__)
 
 # Create Celery instance
 celery_app = Celery(

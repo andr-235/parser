@@ -2,9 +2,8 @@
 
 import uuid
 from datetime import datetime
-from typing import List, Optional, Tuple
 
-from sqlalchemy import func, select, update
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -19,7 +18,7 @@ class MonitoringService:
         self.db = db
 
     # Monitor Task methods
-    async def get_task_by_id(self, task_id: uuid.UUID) -> Optional[MonitorTask]:
+    async def get_task_by_id(self, task_id: uuid.UUID) -> MonitorTask | None:
         """Get monitoring task by ID."""
         result = await self.db.execute(
             select(MonitorTask)
@@ -32,9 +31,9 @@ class MonitoringService:
         self,
         offset: int = 0,
         limit: int = 50,
-        status: Optional[MonitorStatus] = None,
-        target_type: Optional[str] = None,
-    ) -> Tuple[List[MonitorTask], int]:
+        status: MonitorStatus | None = None,
+        target_type: str | None = None,
+    ) -> tuple[list[MonitorTask], int]:
         """Get paginated list of monitoring tasks."""
         query = select(MonitorTask).options(selectinload(MonitorTask.keywords))
         count_query = select(func.count(MonitorTask.id))
@@ -85,7 +84,7 @@ class MonitoringService:
 
     async def update_task(
         self, task_id: uuid.UUID, task_update: MonitorTaskUpdate
-    ) -> Optional[MonitorTask]:
+    ) -> MonitorTask | None:
         """Update monitoring task."""
         task = await self.get_task_by_id(task_id)
         if not task:
@@ -110,21 +109,21 @@ class MonitoringService:
         await self.db.commit()
         return True
 
-    async def start_task(self, task_id: uuid.UUID) -> Optional[MonitorTask]:
+    async def start_task(self, task_id: uuid.UUID) -> MonitorTask | None:
         """Start monitoring task."""
         return await self._update_task_status(task_id, MonitorStatus.ACTIVE)
 
-    async def pause_task(self, task_id: uuid.UUID) -> Optional[MonitorTask]:
+    async def pause_task(self, task_id: uuid.UUID) -> MonitorTask | None:
         """Pause monitoring task."""
         return await self._update_task_status(task_id, MonitorStatus.PAUSED)
 
-    async def complete_task(self, task_id: uuid.UUID) -> Optional[MonitorTask]:
+    async def complete_task(self, task_id: uuid.UUID) -> MonitorTask | None:
         """Complete monitoring task."""
         return await self._update_task_status(task_id, MonitorStatus.COMPLETED)
 
     async def error_task(
         self, task_id: uuid.UUID, error_message: str
-    ) -> Optional[MonitorTask]:
+    ) -> MonitorTask | None:
         """Mark task as error with message."""
         task = await self.get_task_by_id(task_id)
         if not task:
@@ -138,7 +137,7 @@ class MonitoringService:
 
     async def _update_task_status(
         self, task_id: uuid.UUID, status: MonitorStatus
-    ) -> Optional[MonitorTask]:
+    ) -> MonitorTask | None:
         """Update task status."""
         task = await self.get_task_by_id(task_id)
         if not task:
@@ -156,7 +155,7 @@ class MonitoringService:
         task_id: uuid.UUID,
         comments_found: int = 0,
         matches_found: int = 0,
-    ) -> Optional[MonitorTask]:
+    ) -> MonitorTask | None:
         """Update task statistics."""
         task = await self.get_task_by_id(task_id)
         if not task:
@@ -171,12 +170,12 @@ class MonitoringService:
         return task
 
     # Keyword methods
-    async def get_keyword_by_id(self, keyword_id: uuid.UUID) -> Optional[Keyword]:
+    async def get_keyword_by_id(self, keyword_id: uuid.UUID) -> Keyword | None:
         """Get keyword by ID."""
         result = await self.db.execute(select(Keyword).where(Keyword.id == keyword_id))
         return result.scalar_one_or_none()
 
-    async def get_task_keywords(self, task_id: uuid.UUID) -> List[Keyword]:
+    async def get_task_keywords(self, task_id: uuid.UUID) -> list[Keyword]:
         """Get all keywords for a task."""
         result = await self.db.execute(
             select(Keyword)
@@ -207,7 +206,7 @@ class MonitoringService:
 
     async def update_keyword_stats(
         self, keyword_id: uuid.UUID, new_match: bool = True
-    ) -> Optional[Keyword]:
+    ) -> Keyword | None:
         """Update keyword match statistics."""
         keyword = await self.get_keyword_by_id(keyword_id)
         if not keyword:
@@ -222,7 +221,7 @@ class MonitoringService:
         return keyword
 
     # Comment Match methods
-    async def get_match_by_id(self, match_id: uuid.UUID) -> Optional[CommentMatch]:
+    async def get_match_by_id(self, match_id: uuid.UUID) -> CommentMatch | None:
         """Get comment match by ID."""
         result = await self.db.execute(
             select(CommentMatch)
@@ -235,10 +234,10 @@ class MonitoringService:
         self,
         offset: int = 0,
         limit: int = 50,
-        task_id: Optional[uuid.UUID] = None,
-        is_reviewed: Optional[bool] = None,
-        is_relevant: Optional[bool] = None,
-    ) -> Tuple[List[CommentMatch], int]:
+        task_id: uuid.UUID | None = None,
+        is_reviewed: bool | None = None,
+        is_relevant: bool | None = None,
+    ) -> tuple[list[CommentMatch], int]:
         """Get paginated list of comment matches."""
         query = select(CommentMatch).options(
             selectinload(CommentMatch.keyword), selectinload(CommentMatch.monitor_task)
@@ -297,8 +296,8 @@ class MonitoringService:
         self,
         match_id: uuid.UUID,
         is_relevant: bool,
-        notes: Optional[str] = None,
-    ) -> Optional[CommentMatch]:
+        notes: str | None = None,
+    ) -> CommentMatch | None:
         """Review comment match."""
         match = await self.get_match_by_id(match_id)
         if not match:
@@ -313,7 +312,7 @@ class MonitoringService:
         await self.db.refresh(match)
         return match
 
-    async def get_active_tasks(self) -> List[MonitorTask]:
+    async def get_active_tasks(self) -> list[MonitorTask]:
         """Get all active monitoring tasks."""
         result = await self.db.execute(
             select(MonitorTask)

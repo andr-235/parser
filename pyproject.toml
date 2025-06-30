@@ -105,6 +105,7 @@ exclude = [
     "migrations",
 ]
 
+[tool.ruff.lint]
 # Enable rules
 select = [
     "E",     # pycodestyle errors
@@ -139,7 +140,7 @@ ignore = [
 ]
 
 # Per-file ignores
-[tool.ruff.per-file-ignores]
+[tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401", "F403"]
 "tests/*" = ["S101", "S106", "S311", "TRY201"]
 "migrations/*" = ["ALL"]
@@ -147,11 +148,11 @@ ignore = [
 "app/core/config.py" = ["UP007"]  # Use X | Y for union types
 
 # Import sorting (replaces isort)
-[tool.ruff.isort]
+[tool.ruff.lint.isort]
 known-first-party = ["app", "tests"]
 section-order = [
     "future",
-    "standard-library", 
+    "standard-library",
     "third-party",
     "first-party",
     "local-folder"
@@ -159,11 +160,11 @@ section-order = [
 split-on-trailing-comma = true
 
 # McCabe complexity
-[tool.ruff.mccabe]
+[tool.ruff.lint.mccabe]
 max-complexity = 10
 
 # pyupgrade settings
-[tool.ruff.pyupgrade]
+[tool.ruff.lint.pyupgrade]
 keep-runtime-typing = true
 
 [tool.black]
@@ -291,4 +292,4 @@ skips = ["*_test.py", "*test_*.py"]
 
 [build-system]
 requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api" 
+build-backend = "poetry.core.masonry.api"

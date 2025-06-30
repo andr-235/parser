@@ -7,15 +7,15 @@ from app.models.vk import VKComment, VKPost, VKUser
 __all__ = [
     # Base models
     "BaseModel",
-    "TimestampMixin",
-    "UUIDMixin",
-    # VK models
-    "VKUser",
-    "VKPost",
-    "VKComment",
+    "CommentMatch",
+    "Keyword",
+    "MonitorStatus",
     # Monitoring models
     "MonitorTask",
-    "MonitorStatus",
-    "Keyword",
-    "CommentMatch",
+    "TimestampMixin",
+    "UUIDMixin",
+    "VKComment",
+    "VKPost",
+    # VK models
+    "VKUser",
 ]

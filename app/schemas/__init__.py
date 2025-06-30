@@ -19,19 +19,19 @@ from app.schemas.vk import (
 )
 
 __all__ = [
+    "CommentMatchCreate",
+    "CommentMatchResponse",
+    "KeywordCreate",
+    "KeywordResponse",
+    # Monitoring schemas
+    "MonitorTaskCreate",
+    "MonitorTaskResponse",
+    "MonitorTaskUpdate",
+    "VKCommentCreate",
+    "VKCommentResponse",
+    "VKPostCreate",
+    "VKPostResponse",
     # VK schemas
     "VKUserCreate",
     "VKUserResponse",
-    "VKPostCreate",
-    "VKPostResponse",
-    "VKCommentCreate",
-    "VKCommentResponse",
-    # Monitoring schemas
-    "MonitorTaskCreate",
-    "MonitorTaskUpdate",
-    "MonitorTaskResponse",
-    "KeywordCreate",
-    "KeywordResponse",
-    "CommentMatchCreate",
-    "CommentMatchResponse",
 ]

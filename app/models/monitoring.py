@@ -2,11 +2,9 @@
 
 from datetime import datetime
 from enum import Enum
-from typing import List, Optional
 
-from sqlalchemy import BigInteger, Boolean, DateTime
+from sqlalchemy import BigInteger, Boolean, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy import Enum as SQLEnum
-from sqlalchemy import ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import BaseModel
@@ -27,7 +25,7 @@ class MonitorTask(BaseModel):
     __tablename__ = "monitor_tasks"
 
     name: Mapped[str] = mapped_column(String(200), nullable=False)
-    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # VK target configuration
     target_type: Mapped[str] = mapped_column(
@@ -43,26 +41,26 @@ class MonitorTask(BaseModel):
     max_comments_per_check: Mapped[int] = mapped_column(Integer, default=100)
 
     # Time range settings
-    start_date: Mapped[Optional[datetime]] = mapped_column(
+    start_date: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
-    end_date: Mapped[Optional[datetime]] = mapped_column(
+    end_date: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
 
     # Processing statistics
     total_comments_found: Mapped[int] = mapped_column(BigInteger, default=0)
     total_matches_found: Mapped[int] = mapped_column(BigInteger, default=0)
-    last_check_at: Mapped[Optional[datetime]] = mapped_column(
+    last_check_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
-    last_error: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    last_error: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Relationships
-    keywords: Mapped[List["Keyword"]] = relationship(
+    keywords: Mapped[list["Keyword"]] = relationship(
         "Keyword", back_populates="monitor_task", cascade="all, delete-orphan"
     )
-    matches: Mapped[List["CommentMatch"]] = relationship(
+    matches: Mapped[list["CommentMatch"]] = relationship(
         "CommentMatch", back_populates="monitor_task", cascade="all, delete-orphan"
     )
 
@@ -86,7 +84,7 @@ class Keyword(BaseModel):
 
     # Statistics
     match_count: Mapped[int] = mapped_column(BigInteger, default=0)
-    last_match_at: Mapped[Optional[datetime]] = mapped_column(
+    last_match_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
 
@@ -94,7 +92,7 @@ class Keyword(BaseModel):
     monitor_task: Mapped["MonitorTask"] = relationship(
         "MonitorTask", back_populates="keywords"
     )
-    matches: Mapped[List["CommentMatch"]] = relationship(
+    matches: Mapped[list["CommentMatch"]] = relationship(
         "CommentMatch", back_populates="keyword", cascade="all, delete-orphan"
     )
 
@@ -124,10 +122,10 @@ class CommentMatch(BaseModel):
 
     # Processing flags
     is_reviewed: Mapped[bool] = mapped_column(Boolean, default=False)
-    is_relevant: Mapped[Optional[bool]] = mapped_column(
+    is_relevant: Mapped[bool | None] = mapped_column(
         Boolean, nullable=True
     )  # Manual review result
-    notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Relationships
     monitor_task: Mapped["MonitorTask"] = relationship(

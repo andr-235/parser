@@ -1,20 +1,16 @@
 """VK service for real data integration."""
 
-import logging
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
 
-from sqlalchemy import and_, or_, select
+import structlog
+from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
-from app.core.database import AsyncSession
-from app.core.vk_client import VKClient, get_vk_client
+from app.core.vk_client import get_vk_client
 from app.models.monitoring import CommentMatch, Keyword, MonitorTask
 from app.models.vk import VKComment, VKPost, VKUser
-from app.schemas.vk import VKCommentCreate, VKPostCreate, VKUserCreate
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 
 class VKService:
@@ -24,7 +20,7 @@ class VKService:
         self.db = db
         self.vk_client = get_vk_client()  # Real VK client
 
-    async def sync_group_info(self, group_id: int) -> Optional[dict]:
+    async def sync_group_info(self, group_id: int) -> dict | None:
         """Sync VK group information."""
         try:
             group_data = await self.vk_client.get_group_info(group_id)
@@ -37,10 +33,10 @@ class VKService:
                 return None
 
         except Exception as e:
-            logger.error(f"Error syncing group {group_id}: {e}")
+            logger.exception(f"Error syncing group {group_id}: {e}")
             return None
 
-    async def sync_user_data(self, user_id: int) -> Optional[VKUser]:
+    async def sync_user_data(self, user_id: int) -> VKUser | None:
         """Sync VK user data from API to database."""
         try:
             # Check if user already exists
@@ -81,13 +77,13 @@ class VKService:
             return new_user
 
         except Exception as e:
-            logger.error(f"Error syncing user {user_id}: {e}")
+            logger.exception(f"Error syncing user {user_id}: {e}")
             await self.db.rollback()
             return None
 
     async def sync_posts_data(
         self, group_id: int, count: int = 20, offset: int = 0
-    ) -> List[VKPost]:
+    ) -> list[VKPost]:
         """Sync VK posts data from API to database."""
         synced_posts = []
 
@@ -153,7 +149,7 @@ class VKService:
                     )
 
                 except Exception as e:
-                    logger.error(
+                    logger.exception(
                         f"Error processing post {post_data.get('vk_post_id')}: {e}"
                     )
                     continue
@@ -170,13 +166,13 @@ class VKService:
             return synced_posts
 
         except Exception as e:
-            logger.error(f"Error syncing posts for group {group_id}: {e}")
+            logger.exception(f"Error syncing posts for group {group_id}: {e}")
             await self.db.rollback()
             return []
 
     async def sync_comments_data(
         self, group_id: int, post_id: int, count: int = 100, offset: int = 0
-    ) -> List[VKComment]:
+    ) -> list[VKComment]:
         """Sync VK comments data from API to database."""
         synced_comments = []
 
@@ -236,7 +232,7 @@ class VKService:
                     )
 
                 except Exception as e:
-                    logger.error(
+                    logger.exception(
                         f"Error processing comment {comment_data.get('vk_comment_id')}: {e}"
                     )
                     continue
@@ -253,13 +249,13 @@ class VKService:
             return synced_comments
 
         except Exception as e:
-            logger.error(f"Error syncing comments for post {post_id}: {e}")
+            logger.exception(f"Error syncing comments for post {post_id}: {e}")
             await self.db.rollback()
             return []
 
     async def search_and_monitor_keywords(
-        self, monitor_task_id: str, group_id: int, keywords: List[str]
-    ) -> List[CommentMatch]:
+        self, monitor_task_id: str, group_id: int, keywords: list[str]
+    ) -> list[CommentMatch]:
         """Search for keywords in VK comments using real VK API data."""
         matches = []
 
@@ -332,7 +328,7 @@ class VKService:
                                 break  # One match per comment
 
                 except Exception as e:
-                    logger.error(
+                    logger.exception(
                         f"Error processing post {post.vk_post_id} for keywords: {e}"
                     )
                     continue
@@ -349,13 +345,15 @@ class VKService:
             return matches
 
         except Exception as e:
-            logger.error(f"Error in keyword monitoring for task {monitor_task_id}: {e}")
+            logger.exception(
+                f"Error in keyword monitoring for task {monitor_task_id}: {e}"
+            )
             await self.db.rollback()
             return []
 
     async def get_recent_comments_for_monitoring(
         self, group_id: int, hours_back: int = 24
-    ) -> List[VKComment]:
+    ) -> list[VKComment]:
         """Get recent comments for monitoring from database."""
         try:
             since_date = datetime.utcnow() - timedelta(hours=hours_back)
@@ -378,7 +376,7 @@ class VKService:
             return list(comments)
 
         except Exception as e:
-            logger.error(f"Error getting recent comments: {e}")
+            logger.exception(f"Error getting recent comments: {e}")
             return []
 
     async def update_monitoring_statistics(self, monitor_task_id: str) -> bool:
@@ -411,6 +409,6 @@ class VKService:
             return False
 
         except Exception as e:
-            logger.error(f"Error updating monitoring statistics: {e}")
+            logger.exception(f"Error updating monitoring statistics: {e}")
             await self.db.rollback()
             return False

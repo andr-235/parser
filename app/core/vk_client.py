@@ -1,18 +1,17 @@
 """
 VK API Client with rate limiting and comprehensive error handling.
 
-This module provides a robust VK API client specifically designed for 
+This module provides a robust VK API client specifically designed for
 comment monitoring and group analysis.
 """
 
 import asyncio
 import logging
 import time
-from typing import Any, Dict, List, Optional, Tuple
-from urllib.parse import urlencode
+from typing import Any
 
 import aiohttp
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +19,7 @@ logger = logging.getLogger(__name__)
 class VKAPIError(Exception):
     """Base VK API error."""
 
-    def __init__(self, message: str, error_code: Optional[int] = None):
+    def __init__(self, message: str, error_code: int | None = None):
         super().__init__(message)
         self.error_code = error_code
 
@@ -28,14 +27,12 @@ class VKAPIError(Exception):
 class VKRateLimitError(VKAPIError):
     """VK API rate limit exceeded."""
 
-    pass
-
 
 class VKResponse(BaseModel):
     """VK API response model."""
 
-    response: Optional[Dict[str, Any]] = None
-    error: Optional[Dict[str, Any]] = None
+    response: dict[str, Any] | None = None
+    error: dict[str, Any] | None = None
 
 
 class VKComment(BaseModel):
@@ -46,8 +43,8 @@ class VKComment(BaseModel):
     from_id: int
     text: str
     date: int
-    reply_to_user: Optional[int] = None
-    reply_to_comment: Optional[int] = None
+    reply_to_user: int | None = None
+    reply_to_comment: int | None = None
 
 
 class VKPost(BaseModel):
@@ -55,12 +52,12 @@ class VKPost(BaseModel):
 
     id: int
     owner_id: int
-    from_id: Optional[int] = None
+    from_id: int | None = None
     date: int
     text: str
-    comments_count: Optional[int] = 0
-    likes_count: Optional[int] = 0
-    reposts_count: Optional[int] = 0
+    comments_count: int | None = 0
+    likes_count: int | None = 0
+    reposts_count: int | None = 0
 
 
 class VKGroup(BaseModel):
@@ -70,9 +67,9 @@ class VKGroup(BaseModel):
     name: str
     screen_name: str
     type: str
-    description: Optional[str] = None
-    members_count: Optional[int] = 0
-    photo_200: Optional[str] = None
+    description: str | None = None
+    members_count: int | None = 0
+    photo_200: str | None = None
 
 
 class VKAPIClient:
@@ -106,7 +103,7 @@ class VKAPIClient:
         self._request_interval = 1.0 / requests_per_second
 
         # HTTP session
-        self._session: Optional[aiohttp.ClientSession] = None
+        self._session: aiohttp.ClientSession | None = None
 
         # Base URL
         self._base_url = "https://api.vk.com/method"
@@ -164,8 +161,8 @@ class VKAPIClient:
     async def _make_request(
         self,
         method: str,
-        params: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
+        params: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """
         Make a single API request with rate limiting and error handling.
 
@@ -221,17 +218,17 @@ class VKAPIClient:
                 return data.get("response", {})
 
         except aiohttp.ClientError as e:
-            logger.error(f"HTTP error for {method}: {e}")
+            logger.exception(f"HTTP error for {method}: {e}")
             raise VKAPIError(f"HTTP request failed: {e}")
-        except asyncio.TimeoutError:
-            logger.error(f"Timeout for {method}")
+        except TimeoutError:
+            logger.exception(f"Timeout for {method}")
             raise VKAPIError(f"Request timeout for {method}")
 
     async def _make_request_with_retry(
         self,
         method: str,
-        params: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
+        params: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """Make request with retry logic."""
         last_exception = None
 
@@ -312,7 +309,7 @@ class VKAPIClient:
             )
 
         except Exception as e:
-            logger.error(f"Failed to get group info for {group_id}: {e}")
+            logger.exception(f"Failed to get group info for {group_id}: {e}")
             raise
 
     async def get_wall_posts(
@@ -321,7 +318,7 @@ class VKAPIClient:
         count: int = 20,
         offset: int = 0,
         filter: str = "owner",
-    ) -> List[VKPost]:
+    ) -> list[VKPost]:
         """
         Get wall posts from a group.
 
@@ -369,7 +366,7 @@ class VKAPIClient:
             return posts
 
         except Exception as e:
-            logger.error(f"Failed to get posts for group {group_id}: {e}")
+            logger.exception(f"Failed to get posts for group {group_id}: {e}")
             raise
 
     async def get_post_comments(
@@ -379,7 +376,7 @@ class VKAPIClient:
         count: int = 100,
         offset: int = 0,
         sort: str = "asc",
-    ) -> List[VKComment]:
+    ) -> list[VKComment]:
         """
         Get comments for a specific post.
 
@@ -428,16 +425,16 @@ class VKAPIClient:
             return comments
 
         except Exception as e:
-            logger.error(f"Failed to get comments for post {post_id}: {e}")
+            logger.exception(f"Failed to get comments for post {post_id}: {e}")
             raise
 
     async def search_comments_in_group(
         self,
         group_id: int,
-        keywords: List[str],
+        keywords: list[str],
         max_posts: int = 20,
         max_comments_per_post: int = 100,
-    ) -> Tuple[List[VKComment], Dict[str, Any]]:
+    ) -> tuple[list[VKComment], dict[str, Any]]:
         """
         Search for comments containing specific keywords in a group.
 
@@ -508,5 +505,5 @@ class VKAPIClient:
             return matching_comments, stats
 
         except Exception as e:
-            logger.error(f"Search failed for group {group_id}: {e}")
+            logger.exception(f"Search failed for group {group_id}: {e}")
             raise
